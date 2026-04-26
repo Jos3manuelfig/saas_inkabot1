@@ -55,38 +55,30 @@ Tablas relevantes de n8n:
 - Async/await en todos los endpoints y queries
 
 ## Estructura de carpetas
+```
 inkabot-backend/
 ├── app/
-│   ├── main.py              # FastAPI app, CORS, routers
-│   ├── config.py            # Settings con pydantic-settings
-│   ├── database.py          # Engine async, sesión
-│   ├── models/              # SQLAlchemy models
-│   ├── schemas/             # Pydantic schemas (request/response)
-│   ├── routers/             # Endpoints por módulo
-│   │   ├── auth.py
-│   │   ├── tenants.py
-│   │   ├── stats.py
-│   │   └── payments.py
-│   ├── services/            # Lógica de negocio
-│   ├── dependencies.py      # get_current_user, get_db, etc.
-│   └── utils/
-├── alembic/                 # Migraciones
+│   ├── main.py
+│   ├── core/
+│   │   ├── config.py       # Settings con pydantic-settings
+│   │   ├── database.py     # Engine async y sesión
+│   │   └── security.py     # JWT y bcrypt
+│   ├── models/             # SQLAlchemy ORM models
+│   ├── schemas/            # Pydantic v2 schemas
+│   ├── api/
+│   │   ├── deps.py         # Dependencias (get_db, get_current_user)
+│   │   └── v1/             # Routers por dominio
+│   └── services/           # Lógica de negocio y externos
+├── alembic/                # Migraciones
 ├── tests/
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env.example
-└── CLAUDE.md
-
-## Variables de entorno (.env)
-DATABASE_URL=postgresql+asyncpg://user:pass@postgres:5432/inkabot_saas
-N8N_DATABASE_URL=postgresql+asyncpg://user:pass@postgres:5432/n8n
-SECRET_KEY=cambiar_en_produccion
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-YCLOUD_API_KEY=
-CORS_ORIGINS=["https://app.inkabot.pe","http://localhost:5173"]
+├── requirements.txt
+└── .env.example
+```
 
 ## Endpoints principales
+```
 POST   /api/v1/auth/login
 GET    /api/v1/auth/me
 GET    /api/v1/tenants/               # admin only
@@ -98,6 +90,18 @@ GET    /api/v1/stats/{tenant_id}      # admin o cliente propio
 POST   /api/v1/payments/              # admin only
 GET    /api/v1/payments/{tenant_id}
 GET    /api/v1/whatsapp/{tenant_id}/status
+```
+
+## Variables de entorno (.env)
+```
+DATABASE_URL=postgresql+asyncpg://user:pass@postgres:5432/inkabot_saas
+N8N_DATABASE_URL=postgresql+asyncpg://user:pass@postgres:5432/n8n
+SECRET_KEY=cambiar_en_produccion
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+YCLOUD_API_KEY=
+CORS_ORIGINS=["https://app.inkabot.pe","http://localhost:5173"]
+```
 
 ## Reglas importantes
 - NUNCA hardcodear credenciales, siempre usar variables de entorno
