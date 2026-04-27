@@ -2,181 +2,109 @@
 
 import { use } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowLeft, Phone, MessageSquare, Users, CheckCircle,
-  Wifi, WifiOff, Bot, PlusCircle,
-} from 'lucide-react'
-import { Card, StatCard } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Table } from '@/components/ui/Table'
-import { MessagesChart } from '@/components/charts/MessagesChart'
-import { mockClients, mockLeads, mockPayments, mockClientMessageStats } from '@/lib/mock-data'
-import type { Payment, Lead } from '@/types'
+import { ArrowLeft, Phone, MessageSquare, Wifi, WifiOff, Bot, PlusCircle, CheckCircle } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { KPICard } from '@/components/ui/KPICard'
+import { StatusBadge, PlanBadge } from '@/components/ui/StatusBadge'
+import { mockClients, mockPayments, mockMessageStats, formatDate, daysUntil } from '@/lib/mock-data'
 
-interface Props { params: Promise<{ id: string }> }
-
-const stageColors: Record<string, string> = {
-  nuevo:      'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  contactado: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  calificado: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  propuesta:  'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  cerrado:    'bg-green-500/10 text-green-400 border-green-500/20',
+function Box({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`bg-[#141720] border border-[#2A2F42] rounded-2xl ${className}`}>{children}</div>
 }
 
-export default function ClientDetailPage({ params }: Props) {
+export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-
-  const client = mockClients.find(c => c.id === id)
-  if (!client) return (
-    <div className="flex items-center justify-center h-64 text-[#8888aa]">Cliente no encontrado</div>
-  )
-
-  const leads = mockLeads.filter(l => l.clientId === id)
-  const payments = mockPayments.filter(p => p.clientId === id)
-
-  const stageCount = leads.reduce<Record<string, number>>((acc, l) => {
-    acc[l.stage] = (acc[l.stage] || 0) + 1
-    return acc
-  }, {})
-
-  const stages = ['nuevo', 'contactado', 'calificado', 'propuesta', 'cerrado']
-
-  const paymentCols = [
-    { key: 'date',   header: 'Fecha',   render: (p: Payment) => <span className="text-sm text-[#8888aa]">{new Date(p.date).toLocaleDateString('es-PE')}</span> },
-    { key: 'plan',   header: 'Plan',    render: (p: Payment) => <span className="text-sm text-[#e8e8f0]">{p.plan}</span> },
-    { key: 'amount', header: 'Monto',   render: (p: Payment) => <span className="text-sm font-medium text-[#00e5ff]">S/ {p.amount}</span> },
-    { key: 'method', header: 'Método',  render: (p: Payment) => <span className="text-sm text-[#8888aa]">{p.method}</span> },
-    { key: 'status', header: 'Estado',  render: (p: Payment) => <Badge variant={p.status} /> },
-  ]
-
-  const leadCols = [
-    { key: 'name',  header: 'Nombre',  render: (l: Lead) => <span className="text-sm font-medium text-[#e8e8f0]">{l.name}</span> },
-    { key: 'phone', header: 'Teléfono',render: (l: Lead) => <span className="text-sm text-[#8888aa]">{l.phone}</span> },
-    {
-      key: 'stage', header: 'Etapa',
-      render: (l: Lead) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${stageColors[l.stage]}`}>
-          {l.stage}
-        </span>
-      ),
-    },
-    { key: 'date', header: 'Fecha', render: (l: Lead) => <span className="text-xs text-[#8888aa]">{new Date(l.createdAt).toLocaleDateString('es-PE')}</span> },
-  ]
-
-  const totalSent = mockClientMessageStats.reduce((s, d) => s + d.sent, 0)
-  const totalReceived = mockClientMessageStats.reduce((s, d) => s + d.received, 0)
-  const closedLeads = leads.filter(l => l.stage === 'cerrado').length
+  const client = mockClients.find(c => c.id === id) ?? mockClients[0]
+  const payments = mockPayments.filter(p => p.clientId === client.id)
+  const days = daysUntil(client.expiryDate)
+  const totalSent = mockMessageStats.reduce((s, d) => s + d.sent, 0)
+  const totalReceived = mockMessageStats.reduce((s, d) => s + d.received, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 animate-fadeIn">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+        <button onClick={() => router.back()} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] rounded-xl transition-colors cursor-pointer">
           <ArrowLeft size={14} /> Volver
-        </Button>
+        </button>
         <div>
-          <h2 className="text-xl font-bold text-[#e8e8f0]">{client.name}</h2>
-          <p className="text-sm text-[#8888aa]">{client.email}</p>
+          <h1 className="text-xl font-bold text-[#E8EAF0]">{client.name}</h1>
+          <p className="text-sm text-[#6B7280]">{client.email}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-1">
-          <h3 className="text-sm font-semibold text-[#e8e8f0] mb-4">Información del cliente</h3>
+        <Box className="p-5">
+          <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Información</h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Estado bot</span>
-              <div className="flex items-center gap-1.5">
-                <Bot size={13} className={client.botActive ? 'text-green-400' : 'text-red-400'} />
-                <span className={`text-xs font-medium ${client.botActive ? 'text-green-400' : 'text-red-400'}`}>
-                  {client.botActive ? 'Activo' : 'Inactivo'}
-                </span>
+            {[
+              { label: 'Bot', value: <div className="flex items-center gap-1.5"><Bot size={13} className={client.botActive ? 'text-[#00E5A0]' : 'text-[#FF4D6A]'} /><span className={`text-xs font-medium ${client.botActive ? 'text-[#00E5A0]' : 'text-[#FF4D6A]'}`}>{client.botActive ? 'Activo' : 'Inactivo'}</span></div> },
+              { label: 'WhatsApp', value: <StatusBadge status={client.waStatus} /> },
+              { label: 'Número', value: <div className="flex items-center gap-1 text-xs text-[#E8EAF0]"><Phone size={11} />{client.phone}</div> },
+              { label: 'Plan', value: <PlanBadge plan={client.plan} /> },
+              { label: 'Estado', value: <StatusBadge status={client.status} /> },
+              { label: 'Vencimiento', value: <span className={`text-xs font-medium ${days <= 7 ? 'text-[#FF4D6A]' : 'text-[#6B7280]'}`}>{formatDate(client.expiryDate)}</span> },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-center justify-between py-2 border-b border-[#2A2F42] last:border-0">
+                <span className="text-xs text-[#6B7280]">{label}</span>
+                {value}
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">WhatsApp</span>
-              <div className="flex items-center gap-1.5">
-                {client.whatsappStatus === 'connected'
-                  ? <Wifi size={13} className="text-green-400" />
-                  : <WifiOff size={13} className="text-red-400" />}
-                <Badge variant={client.whatsappStatus} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Número WA</span>
-              <div className="flex items-center gap-1.5 text-xs text-[#e8e8f0]">
-                <Phone size={12} /> {client.whatsappNumber}
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Plan</span>
-              <span className="text-xs font-medium text-[#6c3fff] bg-[#6c3fff]/10 px-2 py-0.5 rounded-full border border-[#6c3fff]/20">
-                {client.plan}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Estado cuenta</span>
-              <Badge variant={client.status} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Vencimiento</span>
-              <span className={`text-xs ${client.status === 'expiring' ? 'text-yellow-400 font-medium' : 'text-[#8888aa]'}`}>
-                {new Date(client.expiryDate).toLocaleDateString('es-PE')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#8888aa]">Cliente desde</span>
-              <span className="text-xs text-[#8888aa]">{new Date(client.createdAt).toLocaleDateString('es-PE')}</span>
-            </div>
+            ))}
           </div>
-        </Card>
+        </Box>
 
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 content-start">
-          <StatCard title="Msgs enviados" value={totalSent} icon={<MessageSquare size={18} />} color="violet" />
-          <StatCard title="Msgs recibidos" value={totalReceived} icon={<MessageSquare size={18} />} color="cyan" />
-          <StatCard title="Leads cerrados" value={closedLeads} icon={<CheckCircle size={18} />} color="green" />
+          <KPICard title="Msgs enviados" value={totalSent} icon={<MessageSquare size={18} />} color="violet" />
+          <KPICard title="Msgs recibidos" value={totalReceived} icon={<MessageSquare size={18} />} color="green" />
+          <KPICard title="Leads cerrados" value={5} icon={<CheckCircle size={18} />} color="yellow" />
         </div>
       </div>
 
-      <Card>
-        <MessagesChart data={mockClientMessageStats} title="Mensajes últimos 7 días" />
-      </Card>
+      <Box className="p-5">
+        <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Mensajes (últimos 7 días)</h3>
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={mockMessageStats} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="adV" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7B61FF" stopOpacity={0.3} /><stop offset="95%" stopColor="#7B61FF" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2A2F42" />
+            <XAxis dataKey="date" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ background: '#1C2030', border: '1px solid #2A2F42', borderRadius: 10, color: '#E8EAF0', fontSize: 12 }} />
+            <Area type="monotone" dataKey="sent" stroke="#7B61FF" strokeWidth={2} fill="url(#adV)" name="Enviados" />
+            <Area type="monotone" dataKey="received" stroke="#00E5A0" strokeWidth={2} fill="none" name="Recibidos" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Box>
 
-      <Card>
-        <h3 className="text-sm font-semibold text-[#e8e8f0] mb-4">Funnel de Leads</h3>
-        <div className="flex flex-col sm:flex-row gap-2">
-          {stages.map((stage, i) => {
-            const count = stageCount[stage] || 0
-            const maxCount = Math.max(...stages.map(s => stageCount[s] || 0), 1)
-            const widthPct = Math.max(20, (count / maxCount) * 100)
-            return (
-              <div key={stage} className="flex-1 flex flex-col items-center gap-1.5">
-                <div className="relative w-full rounded-lg overflow-hidden bg-[#0f0f1a] h-12 flex items-center justify-center"
-                  style={{ clipPath: i < stages.length - 1 ? 'polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%)' : undefined }}>
-                  <div className={`absolute left-0 top-0 h-full rounded-lg ${stageColors[stage].split(' ')[0]}`}
-                    style={{ width: `${widthPct}%` }} />
-                  <span className={`relative z-10 text-sm font-bold ${stageColors[stage].split(' ')[1]}`}>{count}</span>
-                </div>
-                <span className="text-[10px] capitalize text-[#8888aa]">{stage}</span>
-              </div>
-            )
-          })}
-        </div>
-        <div className="mt-4">
-          <Table columns={leadCols} data={leads} pageSize={4} />
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-[#e8e8f0]">Historial de pagos</h3>
-          <Button size="sm">
+      <Box className="overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2F42]">
+          <h3 className="text-sm font-semibold text-[#E8EAF0]">Historial de pagos</h3>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl bg-[#7B61FF] text-white hover:bg-[#5B41DF] transition-colors cursor-pointer">
             <PlusCircle size={13} /> Registrar pago
-          </Button>
+          </button>
         </div>
-        <Table columns={paymentCols} data={payments} pageSize={5} />
-      </Card>
+        {payments.length === 0 ? (
+          <p className="px-5 py-8 text-center text-sm text-[#6B7280]">No hay pagos registrados</p>
+        ) : (
+          <div className="divide-y divide-[#2A2F42]">
+            {payments.map(p => (
+              <div key={p.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-[#1C2030] transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-[#E8EAF0]">{p.plan}</p>
+                  <p className="text-xs text-[#6B7280] mt-0.5">{formatDate(p.date)} · {p.method}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-[#00E5A0]">S/ {p.amount}</span>
+                  <StatusBadge status={p.status} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Box>
     </div>
   )
 }

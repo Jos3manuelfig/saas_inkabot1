@@ -2,60 +2,52 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, ChevronDown, User } from 'lucide-react'
+import { LogOut, User, ChevronDown, Bell } from 'lucide-react'
 import { clearSession } from '@/lib/auth'
 import type { User as UserType } from '@/types'
 
-interface NavbarProps {
-  user: UserType
-  title?: string
-}
-
-export function Navbar({ user, title }: NavbarProps) {
+export function Navbar({ user }: { user: UserType }) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
-  function handleLogout() {
-    clearSession()
-    router.push('/login')
-  }
-
   return (
-    <header className="fixed top-0 left-60 right-0 h-16 flex items-center justify-between px-6 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-[#1e1e30] z-30">
-      <div>
-        {title && <h1 className="text-base font-semibold text-[#e8e8f0]">{title}</h1>}
-      </div>
-
-      <div className="relative">
-        <button
-          onClick={() => setOpen(o => !o)}
-          className="flex items-center gap-2.5 rounded-lg border border-[#1e1e30] bg-[#13131f] px-3 py-2 text-sm text-[#e8e8f0] hover:bg-[#1a1a2e] transition-colors cursor-pointer"
-        >
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#6c3fff]/20 text-[#6c3fff]">
-            <User size={14} />
-          </div>
-          <div className="text-left hidden sm:block">
-            <p className="text-xs font-medium leading-none">{user.name}</p>
-            <p className="mt-0.5 text-[10px] text-[#8888aa] capitalize">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</p>
-          </div>
-          <ChevronDown size={14} className={`text-[#8888aa] transition-transform ${open ? 'rotate-180' : ''}`} />
+    <header className="fixed top-0 left-60 right-0 h-[60px] flex items-center justify-between px-6 bg-[#0D0F14]/90 backdrop-blur-md border-b border-[#2A2F42] z-30">
+      <div />
+      <div className="flex items-center gap-3">
+        <button className="p-2 rounded-xl text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+          <Bell size={16} />
         </button>
 
-        {open && (
-          <div className="absolute right-0 mt-2 w-48 rounded-xl border border-[#1e1e30] bg-[#13131f] shadow-xl shadow-black/40 py-1 z-50">
-            <div className="px-3 py-2 border-b border-[#1e1e30]">
-              <p className="text-xs font-medium text-[#e8e8f0]">{user.name}</p>
-              <p className="text-[10px] text-[#8888aa]">{user.email}</p>
+        <div className="relative">
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-[#2A2F42] bg-[#141720] hover:bg-[#1C2030] transition-colors cursor-pointer"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#7B61FF]/20">
+              <User size={13} className="text-[#7B61FF]" />
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-            >
-              <LogOut size={14} />
-              Cerrar sesión
-            </button>
-          </div>
-        )}
+            <div className="text-left hidden sm:block">
+              <p className="text-xs font-medium text-[#E8EAF0] leading-none">{user.name}</p>
+              <p className="text-[10px] text-[#6B7280] mt-0.5">{user.role === 'admin' ? 'Administrador' : 'Cliente'}</p>
+            </div>
+            <ChevronDown size={13} className={`text-[#6B7280] transition-transform ${open ? 'rotate-180' : ''}`} />
+          </button>
+
+          {open && (
+            <div className="absolute right-0 mt-2 w-44 rounded-xl border border-[#2A2F42] bg-[#141720] shadow-2xl overflow-hidden z-50 animate-fadeIn">
+              <div className="px-3 py-2.5 border-b border-[#2A2F42]">
+                <p className="text-xs font-medium text-[#E8EAF0]">{user.name}</p>
+                <p className="text-[10px] text-[#6B7280]">{user.email}</p>
+              </div>
+              <button
+                onClick={() => { clearSession(); router.push('/login') }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer"
+              >
+                <LogOut size={13} /> Cerrar sesión
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )

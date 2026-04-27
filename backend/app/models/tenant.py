@@ -16,3 +16,4 @@ class Tenant(Base, TimestampMixin):
     subscription: Mapped["Subscription | None"] = relationship(back_populates="tenant", uselist=False)
     payments: Mapped[list["Payment"]] = relationship(back_populates="tenant")
     whatsapp_numbers: Mapped[list["WhatsappNumber"]] = relationship(back_populates="tenant")
+    agents: Mapped[list["VendedorAgent"]] = relationship(back_populates="tenant")

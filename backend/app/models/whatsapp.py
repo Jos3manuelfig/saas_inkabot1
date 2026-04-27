@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import String, ForeignKey, Enum, Boolean
+from sqlalchemy import String, ForeignKey, Enum, Boolean, Text
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.models.base import Base, TimestampMixin, uuid_pk
 
@@ -22,7 +22,11 @@ class WhatsappNumber(Base, TimestampMixin):
         default=WhatsappConnectionStatus.disconnected,
         nullable=False,
     )
-    ycloud_phone_id: Mapped[str | None] = mapped_column(String(100))
     bot_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Campos Meta WhatsApp Business API
+    phone_number_id: Mapped[str | None] = mapped_column(String(100), unique=True)
+    access_token: Mapped[str | None] = mapped_column(Text)  # token por número
+
     tenant: Mapped["Tenant"] = relationship(back_populates="whatsapp_numbers")
+    conversations: Mapped[list["Conversation"]] = relationship(back_populates="whatsapp_number")
