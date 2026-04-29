@@ -9,18 +9,30 @@ class MessageRole(str, enum.Enum):
     assistant = "assistant"
 
 
+class ConversationStatus(str, enum.Enum):
+    active = "active"            # conversación en curso
+    sale_closed = "sale_closed"  # cliente concretó una compra
+    sale_lost = "sale_lost"      # cliente se fue sin comprar
+    human_handoff = "human_handoff"  # derivado a humano
+
+
 class Conversation(Base, TimestampMixin):
-    """Una conversación activa entre un usuario final y el bot de un tenant."""
+    """Conversación entre un usuario final y el bot de un tenant."""
     __tablename__ = "conversations"
 
     id: Mapped[str] = uuid_pk()
     tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), nullable=False)
     whatsapp_number_id: Mapped[str] = mapped_column(ForeignKey("whatsapp_numbers.id"), nullable=False)
-    # Número de teléfono del usuario final (quien escribe al bot)
     user_phone: Mapped[str] = mapped_column(String(30), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_message_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[ConversationStatus] = mapped_column(
+        Enum(ConversationStatus), default=ConversationStatus.active, nullable=False
+    )
+    # Resumen breve de la intención detectada por Claude
+    intent_summary: Mapped[str | None] = mapped_column(String(500))
 
+    whatsapp_number: Mapped["WhatsappNumber"] = relationship(back_populates="conversations")
     messages: Mapped[list["Message"]] = relationship(
         back_populates="conversation",
         cascade="all, delete-orphan",

@@ -34,13 +34,7 @@ export interface MessageStat {
   received: number
 }
 
-export const mockClients: Client[] = [
-  { id: '1', name: 'Restaurante El Inka',  email: 'contacto@elinka.pe',      phone: '+51987654321', plan: 'Pro',        status: 'active',   waStatus: 'connected',    expiryDate: '2026-06-14', botActive: true,  createdAt: '2025-01-10' },
-  { id: '2', name: 'Clínica San Borja',    email: 'info@clinicasanborja.pe', phone: '+51976543210', plan: 'Enterprise', status: 'active',   waStatus: 'connected',    expiryDate: '2026-08-29', botActive: true,  createdAt: '2024-11-05' },
-  { id: '3', name: 'Moda Lima Store',      email: 'ventas@modalima.pe',      phone: '+51965432109', plan: 'Básico',     status: 'expiring', waStatus: 'disconnected', expiryDate: '2026-05-01', botActive: false, createdAt: '2025-02-20' },
-  { id: '4', name: 'Academia Fitness Pro', email: 'admin@fitnesspro.pe',     phone: '+51954321098', plan: 'Pro',        status: 'active',   waStatus: 'connected',    expiryDate: '2026-07-09', botActive: true,  createdAt: '2025-03-01' },
-  { id: '5', name: 'Inmobiliaria Andina',  email: 'contacto@andina.pe',      phone: '+51943210987', plan: 'Emprendedor',status: 'inactive', waStatus: 'disconnected', expiryDate: '2025-12-01', botActive: false, createdAt: '2024-09-15' },
-]
+export const mockClients: Client[] = []
 
 export const mockPayments: Payment[] = [
   { id: 'p1', clientId: '1', clientName: 'Restaurante El Inka',  amount: 150, method: 'Yape',         date: '2026-04-01', status: 'paid',    plan: 'Pro' },

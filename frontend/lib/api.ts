@@ -1,4 +1,4 @@
-const BASE_URL = 'https://api.inkabot.pe'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -15,7 +15,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       ...options.headers,
     },
   })
-  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body?.detail ?? `API error: ${res.status}`)
+  }
   return res.json()
 }
 

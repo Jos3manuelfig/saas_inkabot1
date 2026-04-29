@@ -6,13 +6,14 @@ import { Plus, Bot, Trash2, ChevronRight } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getSession } from '@/lib/auth'
 
-const BASE_URL = 'https://api.inkabot.pe'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
 interface Agent {
   id: string
   name: string
   description: string | null
   is_active: boolean
+  is_default: boolean
   created_at: string
   training_blocks: { id: string }[]
 }
@@ -35,13 +36,13 @@ export default function VendedoresPage() {
       const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers })
       if (res.ok) { const json = await res.json(); setAgents(json.data ?? []) }
     } catch {
-      setAgents([{ id: 'demo1', name: 'Vendedor Principal', description: 'Agente de ventas general', is_active: true, created_at: new Date().toISOString(), training_blocks: [{ id: '1' }, { id: '2' }] }])
+      setAgents([{ id: 'demo1', name: 'Vendedor Principal', description: 'Agente de ventas general', is_active: true, is_default: true, created_at: new Date().toISOString(), training_blocks: [{ id: '1' }, { id: '2' }] }])
     } finally { setLoading(false) }
   }
 
   async function createAgent() {
     if (!newName.trim()) return
-    const agent: Agent = { id: `local_${Date.now()}`, name: newName, description: newDesc || null, is_active: true, created_at: new Date().toISOString(), training_blocks: [] }
+    const agent: Agent = { id: `local_${Date.now()}`, name: newName, description: newDesc || null, is_active: true, is_default: agents.length === 0, created_at: new Date().toISOString(), training_blocks: [] }
     setAgents(prev => [agent, ...prev])
     setCreating(false); setNewName(''); setNewDesc('')
     try { await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { method: 'POST', headers, body: JSON.stringify({ name: newName, description: newDesc || null }) }); fetchAgents() } catch {}
@@ -50,6 +51,11 @@ export default function VendedoresPage() {
   async function deleteAgent(id: string) {
     setAgents(prev => prev.filter(a => a.id !== id))
     try { await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}`, { method: 'DELETE', headers }) } catch {}
+  }
+
+  async function setDefault(id: string) {
+    setAgents(prev => prev.map(a => ({ ...a, is_default: a.id === id })))
+    try { await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}`, { method: 'PUT', headers, body: JSON.stringify({ is_default: true }) }) } catch {}
   }
 
   useEffect(() => { fetchAgents() }, [])
@@ -108,9 +114,14 @@ export default function VendedoresPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7B61FF]/15">
                   <Bot size={20} className="text-[#7B61FF]" />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  {agent.is_default && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00E5A0]/15 text-[#00E5A0] border border-[#00E5A0]/25">
+                      WhatsApp
+                    </span>
+                  )}
                   <StatusBadge status={agent.is_active ? 'active' : 'inactive'} />
-                  <button onClick={e => { e.stopPropagation(); deleteAgent(agent.id) }} className="ml-1 p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
+                  <button onClick={e => { e.stopPropagation(); deleteAgent(agent.id) }} className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -118,7 +129,15 @@ export default function VendedoresPage() {
               <h3 className="font-semibold text-[#E8EAF0]">{agent.name}</h3>
               {agent.description && <p className="text-xs text-[#6B7280] mt-1">{agent.description}</p>}
               <div className="mt-4 flex items-center justify-between">
-                <span className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloque{agent.training_blocks.length !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloques</span>
+                  {!agent.is_default && (
+                    <button onClick={e => { e.stopPropagation(); setDefault(agent.id) }}
+                      className="text-[10px] text-[#6B7280] hover:text-[#00E5A0] transition-colors cursor-pointer underline underline-offset-2">
+                      Usar en WA
+                    </button>
+                  )}
+                </div>
                 <button onClick={() => router.push(`/cliente/vendedores/${agent.id}`)} className="flex items-center gap-1 text-xs text-[#7B61FF] hover:text-[#00E5A0] transition-colors cursor-pointer">
                   Abrir <ChevronRight size={12} />
                 </button>

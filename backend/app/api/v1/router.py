@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, tenants, stats, payments, whatsapp, agents, webhook
+from app.api.v1 import auth, tenants, stats, payments, whatsapp, agents, webhook, reports
 
 router = APIRouter(prefix="/api/v1")
 
@@ -10,3 +10,4 @@ router.include_router(payments.router)
 router.include_router(whatsapp.router)
 router.include_router(agents.router)
 router.include_router(webhook.router)
+router.include_router(reports.router)

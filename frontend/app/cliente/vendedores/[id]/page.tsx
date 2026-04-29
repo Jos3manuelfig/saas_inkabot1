@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Plus, Trash2, Send, Bot, User, Loader2, BookOpen, MessageSquare } from 'lucide-react'
 import { getSession } from '@/lib/auth'
 
-const BASE_URL = 'https://api.inkabot.pe'
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
 interface TrainingBlock { id: string; content: string; created_at: string }
 interface Agent { id: string; name: string; description: string | null; training_blocks: TrainingBlock[] }
@@ -68,13 +68,18 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
     const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: message }]
     setChatHistory(newHistory); setResponding(true)
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}/simulate`, { method: 'POST', headers, body: JSON.stringify({ message, history: chatHistory }) })
-      if (res.ok) { const json = await res.json(); setChatHistory([...newHistory, { role: 'assistant', content: json.data.reply }]) }
-      else throw new Error()
+      const trainingBlocks = agent?.training_blocks.map(b => b.content) ?? []
+      const res = await fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: chatHistory, trainingBlocks }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setChatHistory([...newHistory, { role: 'assistant', content: json.reply }])
+      } else throw new Error()
     } catch {
-      await new Promise(r => setTimeout(r, 900))
-      const t = agent?.training_blocks.map(b => b.content).join(' ') ?? ''
-      setChatHistory([...newHistory, { role: 'assistant', content: t ? `¡Hola! ${t.slice(0, 100)}... ¿En qué te ayudo?` : '¡Hola! Entrena mi conocimiento primero 😊' }])
+      setChatHistory([...newHistory, { role: 'assistant', content: 'Error al conectar con el asistente. Intenta de nuevo.' }])
     } finally { setResponding(false) }
   }
 

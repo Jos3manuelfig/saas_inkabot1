@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Lock, Tag, Save, Eye, EyeOff } from 'lucide-react'
+import { User, Lock, Tag, Save, Eye, EyeOff, PhoneCall } from 'lucide-react'
 
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -26,6 +26,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function ConfiguracionPage() {
   const [account, setAccount] = useState({ name: 'José Manuel', email: 'admin@inkabot.pe' })
+  const [handoffPhone, setHandoffPhone] = useState('+51 924 940 724')
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [showPass, setShowPass] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -98,6 +99,28 @@ export default function ConfiguracionPage() {
           <button className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-medium hover:bg-[#5B41DF] transition-colors cursor-pointer">
             <Lock size={13} /> Actualizar contraseña
           </button>
+        </div>
+      </Section>
+
+      {/* Desvío a humano */}
+      <Section title="Desvío a atención humana" icon={<PhoneCall size={16} />}>
+        <p className="text-xs text-[#6B7280] mb-4">
+          Cuando un cliente solicite hablar con una persona, el bot enviará este número de WhatsApp.
+        </p>
+        <Field label="Número de WhatsApp personal">
+          <div className="flex gap-3">
+            <input value={handoffPhone} onChange={e => setHandoffPhone(e.target.value)}
+              placeholder="+51 924 940 724" className="flex-1 px-3 py-2.5 text-sm rounded-xl" />
+            <button className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-medium hover:bg-[#5B41DF] transition-colors cursor-pointer whitespace-nowrap">
+              <Save size={13} /> Guardar
+            </button>
+          </div>
+        </Field>
+        <div className="mt-3 rounded-xl bg-[#00E5A0]/8 border border-[#00E5A0]/20 px-3 py-2.5">
+          <p className="text-xs text-[#00E5A0] font-medium">Mensaje automático del bot:</p>
+          <p className="text-xs text-[#6B7280] mt-1">
+            "Entendido 😊 Te conecto con un asesor. Escríbele directamente a: wa.me/51924940724"
+          </p>
         </div>
       </Section>
 

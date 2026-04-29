@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bot, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { mockLogin, saveSession } from '@/lib/auth'
+import { login, saveSession } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,16 +17,16 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    const result = mockLogin(email, password)
-    setLoading(false)
-    if (!result) {
+    try {
+      const result = await login(email, password)
+      saveSession(result.user, result.token)
+      if (result.user.role === 'admin') router.push('/admin/dashboard')
+      else router.push('/cliente/dashboard')
+    } catch {
       setError('Credenciales incorrectas. Intenta de nuevo.')
-      return
+    } finally {
+      setLoading(false)
     }
-    saveSession(result.user, result.token)
-    if (result.user.role === 'admin') router.push('/admin/dashboard')
-    else router.push('/cliente/dashboard')
   }
 
   return (

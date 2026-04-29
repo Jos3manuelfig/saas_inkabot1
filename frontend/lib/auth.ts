@@ -1,14 +1,37 @@
 import type { User } from '@/types'
 
-const MOCK_USERS: User[] = [
-  { id: '1', name: 'Admin INKABOT', email: 'admin@inkabot.pe', role: 'admin' },
-  { id: '2', name: 'Restaurante El Inka', email: 'contacto@elinka.pe', role: 'client', clientId: '1' },
-]
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
-export function mockLogin(email: string, password: string): { user: User; token: string } | null {
-  const user = MOCK_USERS.find(u => u.email === email)
-  if (!user || password !== 'demo123') return null
-  return { user, token: `mock_jwt_${user.id}_${Date.now()}` }
+export async function login(email: string, password: string): Promise<{ user: User; token: string }> {
+  const res = await fetch(`${API_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+
+  if (!res.ok) {
+    throw new Error('Credenciales incorrectas')
+  }
+
+  const json = await res.json()
+  const token: string = json.data.access_token
+
+  // Obtener datos del usuario con el token
+  const meRes = await fetch(`${API_URL}/api/v1/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const meJson = await meRes.json()
+  const userData = meJson.data
+
+  const user: User = {
+    id: userData.id,
+    name: userData.full_name,
+    email: userData.email,
+    role: userData.role,
+    clientId: userData.tenant_id ?? undefined,
+  }
+
+  return { user, token }
 }
 
 export function saveSession(user: User, token: string) {

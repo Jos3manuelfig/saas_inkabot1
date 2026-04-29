@@ -11,8 +11,8 @@ class VendedorAgent(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    # System prompt base del agente — se construye desde los training blocks
-    # y se puede editar directamente desde el panel del cliente
+    # Agente que responde por WhatsApp — solo uno por tenant puede ser default
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     system_prompt: Mapped[str | None] = mapped_column(Text)
 
     tenant: Mapped["Tenant"] = relationship(back_populates="agents")

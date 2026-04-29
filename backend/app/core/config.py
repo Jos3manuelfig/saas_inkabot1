@@ -11,11 +11,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     ANTHROPIC_API_KEY: str = ""
-
-    # Token secreto que Meta usa para verificar el webhook
     WEBHOOK_VERIFY_TOKEN: str = "inkabot_webhook_secret"
 
-    CORS_ORIGINS: str = '["http://localhost:3000"]'
+    # Número personal para derivar atención humana (formato: 51924940724)
+    HANDOFF_PHONE: str = "51924940724"
+
+    CORS_ORIGINS: str = '["http://localhost:3000","http://localhost:3001"]'
 
     @property
     def cors_origins_list(self) -> list[str]:
