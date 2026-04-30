@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Plus, Trash2, Send, Bot, User, Loader2, BookOpen, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Send, Bot, User, Loader2, BookOpen, MessageSquare, Check } from 'lucide-react'
 import { getSession } from '@/lib/auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
@@ -30,6 +30,7 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
   const [agent, setAgent] = useState<Agent | null>(null)
   const [newBlock, setNewBlock] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   const [userInput, setUserInput] = useState('')
   const [responding, setResponding] = useState(false)
@@ -40,21 +41,54 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
   const token = session?.token ?? ''
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
-  async function fetchAgent() {
+  async function fetchAgent(preserveOnError = false) {
     try {
       const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}`, { headers })
       if (res.ok) { const json = await res.json(); setAgent(json.data); return }
-    } catch {}
-    setAgent({ ...MOCK_AGENT, id })
+      console.error('[agent] GET', res.status, await res.text().catch(() => ''))
+    } catch (e) {
+      console.error('[agent] fetch error', e)
+    }
+    // Solo usar mock si no hay datos reales cargados aún
+    if (!preserveOnError) setAgent(prev => prev ?? { ...MOCK_AGENT, id })
   }
 
   async function addBlock() {
     if (!newBlock.trim() || !agent) return
     setSaving(true)
-    const block: TrainingBlock = { id: `local_${Date.now()}`, content: newBlock, created_at: new Date().toISOString() }
+    const tempId = `local_${Date.now()}`
+    const block: TrainingBlock = { id: tempId, content: newBlock, created_at: new Date().toISOString() }
+    // Actualización optimista: el bloque aparece de inmediato
     setAgent(prev => prev ? { ...prev, training_blocks: [...prev.training_blocks, block] } : prev)
-    setNewBlock(''); setSaving(false)
-    try { await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}/training`, { method: 'POST', headers, body: JSON.stringify({ content: block.content }) }); fetchAgent() } catch {}
+    setNewBlock('')
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}/training`, {
+        method: 'POST', headers, body: JSON.stringify({ content: block.content }),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        // Reemplazar el ID temporal con el ID real devuelto por el backend
+        if (json.data?.id) {
+          setAgent(prev => prev ? {
+            ...prev,
+            training_blocks: prev.training_blocks.map(b => b.id === tempId ? { ...b, id: json.data.id } : b),
+          } : prev)
+        }
+      } else {
+        const errText = await res.text().catch(() => '')
+        console.error('[training] POST failed', res.status, errText)
+        // Revertir optimistic update si el backend rechazó
+        setAgent(prev => prev ? { ...prev, training_blocks: prev.training_blocks.filter(b => b.id !== tempId) } : prev)
+        setSaved(false)
+      }
+    } catch (e) {
+      console.error('[training] fetch error', e)
+      setAgent(prev => prev ? { ...prev, training_blocks: prev.training_blocks.filter(b => b.id !== tempId) } : prev)
+      setSaved(false)
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   async function deleteBlock(blockId: string) {
@@ -83,7 +117,7 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
     } finally { setResponding(false) }
   }
 
-  useEffect(() => { fetchAgent() }, [id])
+  useEffect(() => { fetchAgent(false) }, [id])
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chatHistory])
 
   if (!agent) return <div className="flex items-center justify-center h-64 text-[#6B7280]">Cargando...</div>
@@ -119,8 +153,10 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-[#6B7280]">{newBlock.length} caracteres</span>
               <button onClick={addBlock} disabled={!newBlock.trim() || saving}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">
-                {saving ? <><Loader2 size={13} className="animate-spin" />Guardando...</> : <><Plus size={13} />Agregar bloque</>}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-xl font-semibold transition-all cursor-pointer disabled:opacity-40 ${saved ? 'bg-[#00E5A0] text-[#0D0F14]' : 'bg-[#7B61FF] hover:bg-[#5B41DF] text-white'}`}>
+                {saving ? <><Loader2 size={13} className="animate-spin" />Guardando...</>
+                  : saved ? <><Check size={13} />Guardado</>
+                  : <><Plus size={13} />Agregar bloque</>}
               </button>
             </div>
           </Box>

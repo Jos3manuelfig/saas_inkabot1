@@ -1,7 +1,10 @@
+import logging
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.api.deps import DB, CurrentUser
+
+logger = logging.getLogger(__name__)
 from app.models.agent import VendedorAgent, TrainingBlock
 from app.models.user import UserRole
 from app.schemas.agent import (
@@ -99,11 +102,13 @@ async def add_training_block(
     tenant_id: str, agent_id: str, body: TrainingBlockCreate, db: DB, current_user: CurrentUser
 ):
     _check_tenant_access(current_user, tenant_id)
+    logger.info("[TRAINING] tenant=%s agent=%s user=%s content_len=%d", tenant_id, agent_id, current_user.email, len(body.content))
     await _get_agent_or_404(db, agent_id, tenant_id)
     block = TrainingBlock(agent_id=agent_id, content=body.content)
     db.add(block)
     await db.commit()
     await db.refresh(block)
+    logger.info("[TRAINING] INSERT OK block_id=%s", block.id)
     return Response(data=TrainingBlockOut.model_validate(block).model_dump(), message="Bloque de entrenamiento guardado", status=201)
 
 

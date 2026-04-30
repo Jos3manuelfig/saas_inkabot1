@@ -99,12 +99,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 rounded-lg border border-[#1e1e30] bg-[#0f0f1a] p-3 text-xs text-[#8888aa] space-y-1">
-            <p className="font-medium text-[#6c3fff]">Demo credentials:</p>
-            <p>Admin: <span className="text-[#e8e8f0]">admin@inkabot.pe</span></p>
-            <p>Cliente: <span className="text-[#e8e8f0]">contacto@elinka.pe</span></p>
-            <p>Contraseña: <span className="text-[#e8e8f0]">demo123</span></p>
-          </div>
         </div>
       </div>
     </div>

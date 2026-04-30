@@ -88,6 +88,9 @@ async def _handle_incoming_message(db, incoming) -> None:
             )
             db.add(conversation)
             await db.flush()
+        elif conversation.is_archived:
+            # Reactivar si el cliente escribe de nuevo
+            conversation.is_archived = False
 
         # Si ya fue derivada a humano, no responder más
         if conversation.status == ConversationStatus.human_handoff:

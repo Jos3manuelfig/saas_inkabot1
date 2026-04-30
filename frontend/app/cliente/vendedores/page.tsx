@@ -35,8 +35,9 @@ export default function VendedoresPage() {
     try {
       const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers })
       if (res.ok) { const json = await res.json(); setAgents(json.data ?? []) }
-    } catch {
-      setAgents([{ id: 'demo1', name: 'Vendedor Principal', description: 'Agente de ventas general', is_active: true, is_default: true, created_at: new Date().toISOString(), training_blocks: [{ id: '1' }, { id: '2' }] }])
+      else console.error('[vendedores] GET agents', res.status, await res.text())
+    } catch (e) {
+      console.error('[vendedores] fetch error', e)
     } finally { setLoading(false) }
   }
 

@@ -25,6 +25,7 @@ class Conversation(Base, TimestampMixin):
     whatsapp_number_id: Mapped[str] = mapped_column(ForeignKey("whatsapp_numbers.id"), nullable=False)
     user_phone: Mapped[str] = mapped_column(String(30), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     last_message_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[ConversationStatus] = mapped_column(
         Enum(ConversationStatus), default=ConversationStatus.active, nullable=False
