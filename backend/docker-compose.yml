@@ -11,24 +11,7 @@ services:
       - "traefik.http.routers.inkabot-api.entrypoints=websecure"
       - "traefik.http.routers.inkabot-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.inkabot-api.loadbalancer.server.port=8000"
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-inkabot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: ${POSTGRES_DB:-inkabot_saas}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - inkabot_network
 
 networks:
   inkabot_network:
     external: true
-
-volumes:
-  postgres_data:
