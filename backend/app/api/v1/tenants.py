@@ -140,7 +140,11 @@ async def get_tenant(tenant_id: str, db: DB, current_user: CurrentUser):
 
 @router.put("/{tenant_id}", response_model=Response)
 async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser):
-    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    result = await db.execute(
+        select(Tenant)
+        .where(Tenant.id == tenant_id)
+        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+    )
     tenant = result.scalar_one_or_none()
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant no encontrado")
@@ -150,6 +154,14 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
 
     await db.commit()
     await db.refresh(tenant)
+
+    # Recargar con relaciones después del commit
+    result = await db.execute(
+        select(Tenant)
+        .where(Tenant.id == tenant_id)
+        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+    )
+    tenant = result.scalar_one()
     return Response(data=TenantOut.model_validate(tenant).model_dump(), message="Tenant actualizado")
 
 
