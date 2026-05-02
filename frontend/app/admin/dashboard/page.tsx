@@ -48,7 +48,7 @@ export default function AdminDashboard() {
               <Tooltip
                 contentStyle={{ background: '#1C2030', border: '1px solid #2A2F42', borderRadius: 10, color: '#E8EAF0', fontSize: 12 }}
                 labelStyle={{ color: '#6B7280' }}
-                formatter={(v, name) => [v, name === 'sent' ? 'Enviados' : 'Recibidos']}
+                formatter={((v: unknown, name: unknown) => [v, name === 'sent' ? 'Enviados' : 'Recibidos']) as never}
               />
               <Area type="monotone" dataKey="sent" stroke="#7B61FF" strokeWidth={2} fill="url(#gV)" />
               <Area type="monotone" dataKey="received" stroke="#00E5A0" strokeWidth={2} fill="url(#gG)" />
