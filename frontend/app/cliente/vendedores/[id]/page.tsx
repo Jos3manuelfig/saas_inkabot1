@@ -49,8 +49,10 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
     } catch (e) {
       console.error('[agent] fetch error', e)
     }
-    // Solo usar mock si no hay datos reales cargados aún
-    if (!preserveOnError) setAgent(prev => prev ?? { ...MOCK_AGENT, id })
+    // Solo mostrar mock si aún no hay datos reales y el id parece un mock
+    if (!preserveOnError && id === 'demo1') {
+      setAgent(prev => prev ?? { ...MOCK_AGENT, id })
+    }
   }
 
   async function addBlock() {
@@ -58,37 +60,38 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
     setSaving(true)
     const tempId = `local_${Date.now()}`
     const block: TrainingBlock = { id: tempId, content: newBlock, created_at: new Date().toISOString() }
-    // Actualización optimista: el bloque aparece de inmediato
     setAgent(prev => prev ? { ...prev, training_blocks: [...prev.training_blocks, block] } : prev)
     setNewBlock('')
+
+    let success = false
     try {
       const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}/training`, {
         method: 'POST', headers, body: JSON.stringify({ content: block.content }),
       })
       if (res.ok) {
         const json = await res.json()
-        // Reemplazar el ID temporal con el ID real devuelto por el backend
         if (json.data?.id) {
           setAgent(prev => prev ? {
             ...prev,
             training_blocks: prev.training_blocks.map(b => b.id === tempId ? { ...b, id: json.data.id } : b),
           } : prev)
         }
+        success = true
       } else {
-        const errText = await res.text().catch(() => '')
-        console.error('[training] POST failed', res.status, errText)
-        // Revertir optimistic update si el backend rechazó
+        console.error('[training] POST failed', res.status, await res.text().catch(() => ''))
         setAgent(prev => prev ? { ...prev, training_blocks: prev.training_blocks.filter(b => b.id !== tempId) } : prev)
-        setSaved(false)
       }
     } catch (e) {
       console.error('[training] fetch error', e)
       setAgent(prev => prev ? { ...prev, training_blocks: prev.training_blocks.filter(b => b.id !== tempId) } : prev)
-      setSaved(false)
     }
+
     setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    // Solo mostrar "Guardado" si el backend confirmó el guardado
+    if (success) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
   }
 
   async function deleteBlock(blockId: string) {
