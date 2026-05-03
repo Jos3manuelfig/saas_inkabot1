@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 function buildSystemPrompt(trainingBlocks: string[]): string {
   if (!trainingBlocks.length) {
     return 'Eres un asistente de ventas amable y profesional. Responde las preguntas de los clientes de forma concisa.'
@@ -20,20 +18,33 @@ INSTRUCCIONES:
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const { message, history = [], trainingBlocks = [] } = await req.json()
+  const apiKey = process.env.ANTHROPIC_API_KEY
 
-    if (!message) {
+  if (!apiKey) {
+    console.error('[simulate] ANTHROPIC_API_KEY no está configurada en las variables de entorno')
+    return NextResponse.json(
+      { error: 'Clave de API de Anthropic no configurada. Agrega ANTHROPIC_API_KEY en las variables de entorno.' },
+      { status: 500 }
+    )
+  }
+
+  try {
+    const body = await req.json()
+    const { message, history = [], trainingBlocks = [] } = body
+
+    if (!message?.trim()) {
       return NextResponse.json({ error: 'message requerido' }, { status: 400 })
     }
 
+    const client = new Anthropic({ apiKey })
+
     const systemPrompt = buildSystemPrompt(trainingBlocks)
-    const messages = [
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
       ...history.slice(-20).map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
-      { role: 'user' as const, content: message },
+      { role: 'user', content: message },
     ]
 
     const response = await client.messages.create({
@@ -45,8 +56,13 @@ export async function POST(req: NextRequest) {
 
     const reply = response.content[0].type === 'text' ? response.content[0].text : ''
     return NextResponse.json({ reply })
-  } catch (error) {
-    console.error('Simulate error:', error)
-    return NextResponse.json({ error: 'Error al generar respuesta' }, { status: 500 })
+
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[simulate] Error al llamar a Anthropic:', msg)
+    return NextResponse.json(
+      { error: `Error al generar respuesta: ${msg}` },
+      { status: 500 }
+    )
   }
 }

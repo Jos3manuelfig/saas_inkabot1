@@ -111,12 +111,17 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, history: chatHistory, trainingBlocks }),
       })
-      if (res.ok) {
-        const json = await res.json()
+      const json = await res.json()
+      if (res.ok && json.reply) {
         setChatHistory([...newHistory, { role: 'assistant', content: json.reply }])
-      } else throw new Error()
-    } catch {
-      setChatHistory([...newHistory, { role: 'assistant', content: 'Error al conectar con el asistente. Intenta de nuevo.' }])
+      } else {
+        const errMsg = json.error ?? 'Error al generar respuesta'
+        console.error('[simulate]', res.status, errMsg)
+        setChatHistory([...newHistory, { role: 'assistant', content: `⚠️ ${errMsg}` }])
+      }
+    } catch (e) {
+      console.error('[simulate] fetch error', e)
+      setChatHistory([...newHistory, { role: 'assistant', content: '⚠️ Error de conexión con el simulador. Intenta de nuevo.' }])
     } finally { setResponding(false) }
   }
 
