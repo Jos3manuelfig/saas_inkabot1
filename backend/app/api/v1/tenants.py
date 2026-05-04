@@ -2,13 +2,14 @@ import secrets
 import string
 from datetime import date
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.api.deps import DB, AdminUser, CurrentUser
 from app.models.tenant import Tenant
 from app.models.user import User, UserRole
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.agent import VendedorAgent
+from app.models.plan import Plan
 from app.core.security import hash_password
 from app.models.user import UserRole
 from app.schemas.tenant import TenantCreate, TenantUpdate, TenantOut, TenantCreateResponse
@@ -45,18 +46,16 @@ async def create_tenant(body: TenantCreate, db: DB, _: AdminUser):
     if existing_user.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Ya existe un usuario con ese email")
 
-    # Obtener el Plan — usamos CAST explícito para evitar mismatch con el enum de PostgreSQL
-    plan_result = await db.execute(
-        text("SELECT id FROM plans WHERE name = CAST(:name AS plantype) LIMIT 1"),
-        {"name": body.plan},
-    )
-    plan_id = plan_result.scalar_one_or_none()
-    if not plan_id:
+    # Obtener el Plan usando lowercase para coincidir con el enum de PostgreSQL
+    plan_result = await db.execute(select(Plan).where(Plan.name == body.plan.lower()))
+    plan_obj = plan_result.scalar_one_or_none()
+    if not plan_obj:
         # Fallback: primer plan disponible
-        fallback = await db.execute(text("SELECT id FROM plans LIMIT 1"))
-        plan_id = fallback.scalar_one_or_none()
-        if not plan_id:
-            raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado. Ejecuta scripts/seed_plans.py primero.")
+        fallback = await db.execute(select(Plan).limit(1))
+        plan_obj = fallback.scalar_one_or_none()
+    plan_id = plan_obj.id if plan_obj else None
+    if not plan_id:
+        raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado. Ejecuta scripts/seed_plans.py primero.")
 
     # Generar contraseña
     raw_password = _generate_password()
@@ -164,14 +163,11 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
 
         if subscription:
             if body.plan is not None:
-                plan_id_row = await db.execute(
-                    text("SELECT id FROM plans WHERE name = CAST(:name AS plantype) LIMIT 1"),
-                    {"name": body.plan},
-                )
-                new_plan_id = plan_id_row.scalar_one_or_none()
-                if not new_plan_id:
+                plan_result = await db.execute(select(Plan).where(Plan.name == body.plan.lower()))
+                plan_obj = plan_result.scalar_one_or_none()
+                if not plan_obj:
                     raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado")
-                subscription.plan_id = new_plan_id
+                subscription.plan_id = plan_obj.id
 
             if body.expiry_date is not None:
                 subscription.end_date = body.expiry_date
