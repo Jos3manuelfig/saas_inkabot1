@@ -149,11 +149,34 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant no encontrado")
 
+    # Campos propios del Tenant (excluir plan y expiry_date, que van a subscriptions)
+    tenant_fields = {"name", "email", "phone", "is_active"}
     for field, value in body.model_dump(exclude_none=True).items():
-        setattr(tenant, field, value)
+        if field in tenant_fields:
+            setattr(tenant, field, value)
+
+    # Actualizar suscripción si se envía plan o expiry_date
+    if body.plan is not None or body.expiry_date is not None:
+        sub_result = await db.execute(
+            select(Subscription).where(Subscription.tenant_id == tenant_id)
+        )
+        subscription = sub_result.scalar_one_or_none()
+
+        if subscription:
+            if body.plan is not None:
+                plan_id_row = await db.execute(
+                    text("SELECT id FROM plans WHERE name = CAST(:name AS plantype) LIMIT 1"),
+                    {"name": body.plan},
+                )
+                new_plan_id = plan_id_row.scalar_one_or_none()
+                if not new_plan_id:
+                    raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado")
+                subscription.plan_id = new_plan_id
+
+            if body.expiry_date is not None:
+                subscription.end_date = body.expiry_date
 
     await db.commit()
-    await db.refresh(tenant)
 
     # Recargar con relaciones después del commit
     result = await db.execute(

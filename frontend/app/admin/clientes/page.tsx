@@ -211,8 +211,20 @@ export default function ClientesPage() {
     if (!editClient) return
     setSaving(true); setError(null)
     try {
-      await api.put(`/api/v1/tenants/${editClient.id}`, { name: editForm.name, email: editForm.email, phone: editForm.phone || null })
-      setClients(prev => prev.map(x => x.id === editClient.id ? { ...x, name: editForm.name, email: editForm.email, phone: editForm.phone } : x))
+      const payload: Record<string, unknown> = {
+        name:  editForm.name,
+        email: editForm.email,
+        phone: editForm.phone || null,
+      }
+      if (editForm.plan)       payload.plan        = editForm.plan
+      if (editForm.expiryDate) payload.expiry_date = editForm.expiryDate
+
+      await api.put(`/api/v1/tenants/${editClient.id}`, payload)
+      setClients(prev => prev.map(x =>
+        x.id === editClient.id
+          ? { ...x, name: editForm.name, email: editForm.email, phone: editForm.phone, plan: editForm.plan, expiryDate: editForm.expiryDate }
+          : x
+      ))
       setEditClient(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al actualizar cliente')

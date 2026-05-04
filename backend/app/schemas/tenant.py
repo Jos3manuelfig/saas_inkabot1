@@ -22,6 +22,8 @@ class TenantUpdate(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     is_active: bool | None = None
+    plan: str | None = None
+    expiry_date: date | None = None
 
 
 class SubscriptionOut(BaseModel):
