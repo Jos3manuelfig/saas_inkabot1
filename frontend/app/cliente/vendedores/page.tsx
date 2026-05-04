@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Bot, Trash2, ChevronRight } from 'lucide-react'
+import { Plus, Bot, Trash2, ChevronRight, Lock } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getSession } from '@/lib/auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
+
+const PLAN_LIMITS: Record<string, number> = {
+  'Emprendedor': 1,
+  'Profesional': 3,
+}
 
 interface Agent {
   id: string
@@ -20,22 +25,27 @@ interface Agent {
 
 export default function VendedoresPage() {
   const router = useRouter()
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [loading, setLoading] = useState(true)
+  const [agents, setAgents]   = useState<Agent[]>([])
+  const [planName, setPlanName] = useState<string>('Emprendedor')
+  const [loading, setLoading]  = useState(true)
   const [creating, setCreating] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newDesc, setNewDesc] = useState('')
+  const [newName, setNewName]  = useState('')
+  const [newDesc, setNewDesc]  = useState('')
 
-  const session = getSession()
-  const tenantId = session?.user.clientId ?? '1'
-  const token = session?.token ?? ''
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+  const session  = getSession()
+  const tenantId = session?.user.clientId ?? ''
+  const token    = session?.token ?? ''
+  const headers  = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
   async function fetchAgents() {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers })
-      if (res.ok) { const json = await res.json(); setAgents(json.data ?? []) }
-      else console.error('[vendedores] GET agents', res.status, await res.text())
+      const [agentsRes, statsRes] = await Promise.all([
+        fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers }),
+        fetch(`${BASE_URL}/api/v1/stats/${tenantId}`,  { headers }),
+      ])
+      if (agentsRes.ok) { const j = await agentsRes.json(); setAgents(j.data ?? []) }
+      else console.error('[vendedores] GET agents', agentsRes.status)
+      if (statsRes.ok)  { const j = await statsRes.json();  setPlanName(j.data?.plan_name ?? 'Emprendedor') }
     } catch (e) {
       console.error('[vendedores] fetch error', e)
     } finally { setLoading(false) }
@@ -43,10 +53,14 @@ export default function VendedoresPage() {
 
   async function createAgent() {
     if (!newName.trim()) return
-    const agent: Agent = { id: `local_${Date.now()}`, name: newName, description: newDesc || null, is_active: true, is_default: agents.length === 0, created_at: new Date().toISOString(), training_blocks: [] }
-    setAgents(prev => [agent, ...prev])
     setCreating(false); setNewName(''); setNewDesc('')
-    try { await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { method: 'POST', headers, body: JSON.stringify({ name: newName, description: newDesc || null }) }); fetchAgents() } catch {}
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, {
+        method: 'POST', headers, body: JSON.stringify({ name: newName, description: newDesc || null }),
+      })
+      if (res.ok) { fetchAgents() }
+      else { console.error('[vendedores] POST agent', res.status, await res.text()) }
+    } catch (e) { console.error('[vendedores] create error', e) }
   }
 
   async function deleteAgent(id: string) {
@@ -61,6 +75,10 @@ export default function VendedoresPage() {
 
   useEffect(() => { fetchAgents() }, [])
 
+  const limit      = PLAN_LIMITS[planName] ?? 1
+  const atLimit    = agents.length >= limit
+  const isProf     = planName === 'Profesional'
+
   return (
     <div className="space-y-5 animate-fadeIn">
       <div className="flex items-center justify-between">
@@ -68,32 +86,66 @@ export default function VendedoresPage() {
           <h1 className="text-2xl font-bold text-[#E8EAF0]">Mis Vendedores</h1>
           <p className="text-sm text-[#6B7280] mt-0.5">Agentes de IA entrenados con tu información</p>
         </div>
-        <button onClick={() => setCreating(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#7B61FF] hover:bg-[#5B41DF] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer">
-          <Plus size={15} /> Nuevo vendedor
-        </button>
+        {!atLimit ? (
+          <button onClick={() => setCreating(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#7B61FF] hover:bg-[#5B41DF] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer">
+            <Plus size={15} /> Nuevo vendedor
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#2A2F42] text-[#6B7280] text-sm">
+            <Lock size={14} /> Límite alcanzado
+          </div>
+        )}
       </div>
 
+      {/* Aviso de límite del plan */}
+      {atLimit && (
+        <div className="flex items-start gap-3 rounded-xl border border-[#7B61FF]/30 bg-[#7B61FF]/8 px-4 py-3">
+          <Lock size={15} className="text-[#7B61FF] shrink-0 mt-0.5" />
+          <p className="text-sm text-[#7B61FF]">
+            {isProf
+              ? 'Tu plan Profesional incluye hasta 3 vendedores. Has alcanzado el límite.'
+              : 'Tu plan Emprendedor incluye 1 vendedor. Actualiza al '}
+            {!isProf && (
+              <a href="/cliente/plan" className="font-semibold underline underline-offset-2 hover:text-[#00E5A0] transition-colors">
+                Plan Profesional
+              </a>
+            )}
+            {!isProf && ' para agregar más.'}
+          </p>
+        </div>
+      )}
+
+      {/* Formulario de creación */}
       {creating && (
         <div className="bg-[#141720] border border-[#7B61FF]/30 rounded-2xl p-5 shadow-[0_0_20px_rgba(123,97,255,0.1)]">
           <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Crear vendedor</h3>
           <div className="space-y-3">
             <div>
               <label className="block text-xs text-[#6B7280] mb-1.5">Nombre *</label>
-              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: Vendedor Ropa..." className="w-full px-3 py-2.5 text-sm rounded-xl" />
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: Vendedor Principal..."
+                className="w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]" />
             </div>
             <div>
               <label className="block text-xs text-[#6B7280] mb-1.5">Descripción (opcional)</label>
-              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="¿Para qué usarás este vendedor?" className="w-full px-3 py-2.5 text-sm rounded-xl" />
+              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="¿Para qué usarás este vendedor?"
+                className="w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]" />
             </div>
             <div className="flex gap-2 pt-1">
-              <button onClick={createAgent} disabled={!newName.trim()} className="px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">Crear</button>
-              <button onClick={() => { setCreating(false); setNewName(''); setNewDesc('') }} className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">Cancelar</button>
+              <button onClick={createAgent} disabled={!newName.trim()}
+                className="px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">
+                Crear
+              </button>
+              <button onClick={() => { setCreating(false); setNewName(''); setNewDesc('') }}
+                className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Lista de agentes */}
       {loading ? (
         <div className="flex justify-center py-12 text-[#6B7280] text-sm">Cargando vendedores...</div>
       ) : agents.length === 0 ? (
@@ -103,49 +155,58 @@ export default function VendedoresPage() {
           </div>
           <p className="text-[#E8EAF0] font-semibold">No tienes vendedores creados</p>
           <p className="text-sm text-[#6B7280]">Crea tu primer agente de IA y empieza a entrenarlo</p>
-          <button onClick={() => setCreating(true)} className="mt-2 flex items-center gap-2 px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] transition-colors cursor-pointer">
+          <button onClick={() => setCreating(true)}
+            className="mt-2 flex items-center gap-2 px-4 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] transition-colors cursor-pointer">
             <Plus size={14} /> Crear mi primer vendedor
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {agents.map(agent => (
-            <div key={agent.id} className="bg-[#141720] border border-[#2A2F42] hover:border-[#7B61FF]/40 rounded-2xl p-5 transition-colors">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7B61FF]/15">
-                  <Bot size={20} className="text-[#7B61FF]" />
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {agents.map(agent => (
+              <div key={agent.id} className="bg-[#141720] border border-[#2A2F42] hover:border-[#7B61FF]/40 rounded-2xl p-5 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7B61FF]/15">
+                    <Bot size={20} className="text-[#7B61FF]" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {agent.is_default && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00E5A0]/15 text-[#00E5A0] border border-[#00E5A0]/25">
+                        WhatsApp
+                      </span>
+                    )}
+                    <StatusBadge status={agent.is_active ? 'active' : 'inactive'} />
+                    <button onClick={e => { e.stopPropagation(); deleteAgent(agent.id) }}
+                      className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  {agent.is_default && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00E5A0]/15 text-[#00E5A0] border border-[#00E5A0]/25">
-                      WhatsApp
-                    </span>
-                  )}
-                  <StatusBadge status={agent.is_active ? 'active' : 'inactive'} />
-                  <button onClick={e => { e.stopPropagation(); deleteAgent(agent.id) }} className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
-                    <Trash2 size={13} />
+                <h3 className="font-semibold text-[#E8EAF0]">{agent.name}</h3>
+                {agent.description && <p className="text-xs text-[#6B7280] mt-1">{agent.description}</p>}
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloques</span>
+                    {!agent.is_default && (
+                      <button onClick={e => { e.stopPropagation(); setDefault(agent.id) }}
+                        className="text-[10px] text-[#6B7280] hover:text-[#00E5A0] transition-colors cursor-pointer underline underline-offset-2">
+                        Usar en WA
+                      </button>
+                    )}
+                  </div>
+                  <button onClick={() => router.push(`/cliente/vendedores/${agent.id}`)}
+                    className="flex items-center gap-1 text-xs text-[#7B61FF] hover:text-[#00E5A0] transition-colors cursor-pointer">
+                    Abrir <ChevronRight size={12} />
                   </button>
                 </div>
               </div>
-              <h3 className="font-semibold text-[#E8EAF0]">{agent.name}</h3>
-              {agent.description && <p className="text-xs text-[#6B7280] mt-1">{agent.description}</p>}
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloques</span>
-                  {!agent.is_default && (
-                    <button onClick={e => { e.stopPropagation(); setDefault(agent.id) }}
-                      className="text-[10px] text-[#6B7280] hover:text-[#00E5A0] transition-colors cursor-pointer underline underline-offset-2">
-                      Usar en WA
-                    </button>
-                  )}
-                </div>
-                <button onClick={() => router.push(`/cliente/vendedores/${agent.id}`)} className="flex items-center gap-1 text-xs text-[#7B61FF] hover:text-[#00E5A0] transition-colors cursor-pointer">
-                  Abrir <ChevronRight size={12} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          {/* Contador plan */}
+          <p className="text-xs text-[#6B7280] text-right">
+            {agents.length} de {limit} vendedor{limit !== 1 ? 'es' : ''} — Plan {planName}
+          </p>
+        </>
       )}
     </div>
   )

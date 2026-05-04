@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, func, text
 from sqlalchemy.orm import selectinload
 from app.api.deps import DB, CurrentUser
 
@@ -53,6 +53,31 @@ async def list_agents(tenant_id: str, db: DB, current_user: CurrentUser):
 @router.post("/{tenant_id}", response_model=Response, status_code=status.HTTP_201_CREATED)
 async def create_agent(tenant_id: str, body: AgentCreate, db: DB, current_user: CurrentUser):
     _check_tenant_access(current_user, tenant_id)
+
+    # Verificar límite por plan (solo para clientes, no para admin)
+    if current_user.role != UserRole.admin:
+        plan_row = await db.execute(
+            text("""
+                SELECT p.name FROM plans p
+                JOIN subscriptions s ON s.plan_id = p.id
+                WHERE s.tenant_id = :tid LIMIT 1
+            """),
+            {"tid": tenant_id},
+        )
+        plan_name = plan_row.scalar_one_or_none() or "Emprendedor"
+        limit = 3 if plan_name == "Profesional" else 1
+
+        count = (await db.execute(
+            select(func.count(VendedorAgent.id)).where(VendedorAgent.tenant_id == tenant_id)
+        )).scalar() or 0
+
+        if count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Tu plan {plan_name} permite hasta {limit} vendedor{'es' if limit > 1 else ''}. "
+                       f"Actualiza al Plan Profesional para agregar más.",
+            )
+
     agent = VendedorAgent(tenant_id=tenant_id, **body.model_dump())
     db.add(agent)
     await db.commit()

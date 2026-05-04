@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Eye, Pencil, Trash2, PowerOff, Power, Filter, Copy, Check, Loader2 } from 'lucide-react'
+import { Plus, Search, Eye, Pencil, Trash2, PowerOff, Power, Filter, Copy, Check, Loader2, KeyRound } from 'lucide-react'
 import { Modal, ConfirmModal } from '@/components/ui/Modal'
 import { StatusBadge, PlanBadge } from '@/components/ui/StatusBadge'
 import { api } from '@/lib/api'
@@ -28,6 +28,7 @@ interface Client {
 }
 
 interface CreatedCredentials { email: string; password: string; tenantName: string }
+interface ResetCredentials  { email: string; password: string }
 
 const PLANS: Plan[] = ['Emprendedor', 'Profesional']
 const emptyForm = { name: '', email: '', phone: '+51', plan: 'Emprendedor' as Plan, expiryDate: '', status: 'active' as ClientStatus }
@@ -138,7 +139,9 @@ export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [toggling, setToggling] = useState<string | null>(null)   // id del cliente que se está toggling
+  const [toggling, setToggling]   = useState<string | null>(null)
+  const [resetting, setResetting] = useState<string | null>(null)
+  const [resetCreds, setResetCreds] = useState<ResetCredentials | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterPlan, setFilterPlan] = useState('')
@@ -189,6 +192,19 @@ export default function ClientesPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al crear cliente')
     } finally { setSaving(false) }
+  }
+
+  async function handleResetPassword(c: Client) {
+    setResetting(c.id)
+    setError(null)
+    try {
+      const res = await api.post<{ data: { email: string; new_password: string } }>(
+        `/api/v1/tenants/${c.id}/reset-password`, {}
+      )
+      setResetCreds({ email: res.data.email, password: res.data.new_password })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al resetear contraseña')
+    } finally { setResetting(null) }
   }
 
   async function handleEdit() {
@@ -284,22 +300,23 @@ export default function ClientesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#2A2F42] bg-[#0D0F14]">
-                {['Cliente', 'Plan', 'WhatsApp', 'Estado', 'Vencimiento', 'Acciones'].map(h => (
+                {['Cliente', 'Plan', 'WhatsApp', 'Estado', 'Vencimiento', 'Credenciales', 'Acciones'].map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A2F42]">
               {loading ? (
-                <tr><td colSpan={6} className="px-5 py-12 text-center"><Loader2 size={20} className="animate-spin text-[#7B61FF] mx-auto" /></td></tr>
+                <tr><td colSpan={7} className="px-5 py-12 text-center"><Loader2 size={20} className="animate-spin text-[#7B61FF] mx-auto" /></td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#6B7280]">
+                <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[#6B7280]">
                   {filterStatus ? `No hay clientes ${filterStatus === 'active' ? 'activos' : filterStatus === 'inactive' ? 'inactivos' : 'por vencer'}` : 'No se encontraron clientes'}
                 </td></tr>
               ) : filtered.map(c => {
                 const days = daysUntil(c.expiryDate)
-                const isInactive = c.status === 'inactive'
-                const isToggling = toggling === c.id
+                const isInactive  = c.status === 'inactive'
+                const isToggling  = toggling  === c.id
+                const isResetting = resetting === c.id
                 return (
                   <tr key={c.id} className={`transition-all ${isInactive ? 'opacity-60 bg-[#0D0F14]/50' : 'hover:bg-[#1C2030]'}`}>
                     <td className="px-5 py-4">
@@ -318,6 +335,18 @@ export default function ClientesPage() {
                       </p>
                       {days <= 7 && days > 0 && <p className="text-[10px] text-[#FF4D6A] mt-0.5">{days}d restantes</p>}
                       {days <= 0 && c.expiryDate && <p className="text-[10px] text-[#FF4D6A] mt-0.5">Vencido</p>}
+                    </td>
+                    {/* Credenciales — reset password */}
+                    <td className="px-5 py-4">
+                      <button
+                        title="Resetear contraseña"
+                        onClick={() => handleResetPassword(c)}
+                        disabled={isResetting}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#7B61FF] hover:border-[#7B61FF]/50 hover:bg-[#7B61FF]/8 transition-colors cursor-pointer disabled:opacity-40"
+                      >
+                        {isResetting ? <Loader2 size={11} className="animate-spin" /> : <KeyRound size={11} />}
+                        {isResetting ? 'Reseteando...' : 'Resetear'}
+                      </button>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1">
@@ -391,6 +420,40 @@ export default function ClientesPage() {
 
       {/* Modal: Credenciales */}
       {credentials && <CredentialsModal creds={credentials} onClose={() => setCredentials(null)} />}
+
+      {/* Modal: Nueva contraseña reseteada */}
+      {resetCreds && (
+        <Modal open onClose={() => setResetCreds(null)} title="Contraseña reseteada">
+          <div className="space-y-4">
+            <p className="text-sm text-[#6B7280]">Comparte las nuevas credenciales con el cliente.</p>
+            <div className="bg-[#0D0F14] border border-[#2A2F42] rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-[#6B7280] mb-0.5">Email</p>
+                  <p className="text-sm font-mono text-[#E8EAF0]">{resetCreds.email}</p>
+                </div>
+                <CopyBtn text={resetCreds.email} />
+              </div>
+              <div className="border-t border-[#2A2F42]" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-[#6B7280] mb-0.5">Nueva contraseña</p>
+                  <p className="text-sm font-mono text-[#7B61FF] font-bold tracking-widest">{resetCreds.password}</p>
+                </div>
+                <CopyBtn text={resetCreds.password} />
+              </div>
+            </div>
+            <button onClick={() => navigator.clipboard.writeText(`Email: ${resetCreds.email}\nContraseña: ${resetCreds.password}`)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-[#2A2F42] rounded-xl text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+              <Copy size={13} /> Copiar todo
+            </button>
+            <button onClick={() => setResetCreds(null)}
+              className="w-full px-4 py-2.5 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] transition-colors cursor-pointer">
+              Entendido
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Modal: Eliminar (único que necesita confirmación — es irreversible) */}
       <ConfirmModal

@@ -165,6 +165,22 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
     return Response(data=TenantOut.model_validate(tenant).model_dump(), message="Tenant actualizado")
 
 
+@router.post("/{tenant_id}/reset-password", response_model=Response)
+async def reset_password(tenant_id: str, db: DB, _: AdminUser):
+    """Genera una nueva contraseña aleatoria para el usuario client del tenant."""
+    result = await db.execute(
+        select(User).where(User.tenant_id == tenant_id, User.role == UserRole.client)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario del cliente no encontrado")
+
+    new_password = _generate_password()
+    user.hashed_password = hash_password(new_password)
+    await db.commit()
+    return Response(data={"email": user.email, "new_password": new_password}, message="Contraseña reseteada")
+
+
 @router.delete("/{tenant_id}", response_model=Response)
 async def delete_tenant(tenant_id: str, db: DB, _: AdminUser):
     result = await db.execute(
