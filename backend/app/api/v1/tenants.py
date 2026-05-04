@@ -148,30 +148,58 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant no encontrado")
 
-    # Campos propios del Tenant (excluir plan y expiry_date, que van a subscriptions)
+    # 1. Actualizar campos propios del Tenant
     tenant_fields = {"name", "email", "phone", "is_active"}
     for field, value in body.model_dump(exclude_none=True).items():
         if field in tenant_fields:
             setattr(tenant, field, value)
 
-    # Actualizar suscripción si se envía plan o expiry_date
+    # 2. Actualizar suscripción si llegan plan o expiry_date
     if body.plan is not None or body.expiry_date is not None:
+
+        # Resolver plan_id si se envía nombre de plan
+        new_plan_id = None
+        if body.plan is not None:
+            plan_result = await db.execute(select(Plan).where(Plan.name == body.plan.lower()))
+            plan_obj = plan_result.scalar_one_or_none()
+            if not plan_obj:
+                raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado")
+            new_plan_id = plan_obj.id
+            print(f"[update_tenant] Plan encontrado: {plan_obj.name} id={new_plan_id}")
+
+        today = date.today()
+
+        # Buscar suscripción existente
         sub_result = await db.execute(
             select(Subscription).where(Subscription.tenant_id == tenant_id)
         )
         subscription = sub_result.scalar_one_or_none()
 
         if subscription:
-            if body.plan is not None:
-                plan_result = await db.execute(select(Plan).where(Plan.name == body.plan.lower()))
-                plan_obj = plan_result.scalar_one_or_none()
-                if not plan_obj:
-                    raise HTTPException(status_code=400, detail=f"Plan '{body.plan}' no encontrado")
-                subscription.plan_id = plan_obj.id
-
+            # UPDATE: modificar suscripción existente
+            if new_plan_id:
+                subscription.plan_id = new_plan_id
             if body.expiry_date is not None:
                 subscription.end_date = body.expiry_date
+            print(f"[update_tenant] Suscripcion actualizada: plan_id={subscription.plan_id} end_date={subscription.end_date}")
+        else:
+            # INSERT: crear nueva suscripción si no existe
+            if not new_plan_id:
+                # Fallback al primer plan disponible
+                fb = (await db.execute(select(Plan).limit(1))).scalar_one_or_none()
+                new_plan_id = fb.id if fb else None
+            if new_plan_id:
+                new_sub = Subscription(
+                    tenant_id=tenant_id,
+                    plan_id=new_plan_id,
+                    start_date=today,
+                    end_date=body.expiry_date or date(today.year + 1, today.month, today.day),
+                    status=SubscriptionStatus.active,
+                )
+                db.add(new_sub)
+                print(f"[update_tenant] Nueva suscripcion creada: plan_id={new_plan_id} end_date={new_sub.end_date}")
 
+    # 3. Commit único después de todos los cambios
     await db.commit()
 
     # Recargar con relaciones después del commit
