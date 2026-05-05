@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, BarChart2, CreditCard, Settings, Zap, Cpu, TrendingUp, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Users, BarChart2, CreditCard, Settings, Zap, Cpu, TrendingUp, MessageSquare, LifeBuoy } from 'lucide-react'
 
 const adminNav = [
   { label: 'Dashboard',     href: '/admin/dashboard',     icon: LayoutDashboard },
@@ -19,6 +19,7 @@ const clientNav = [
   { label: 'Reportes',        href: '/cliente/reportes',       icon: TrendingUp },
   { label: 'Estadísticas',    href: '/cliente/estadisticas',   icon: BarChart2 },
   { label: 'Mi Plan',         href: '/cliente/plan',           icon: Zap },
+  { label: 'Soporte',         href: '/cliente/soporte',        icon: LifeBuoy },
 ]
 
 interface SidebarProps { role: 'admin' | 'client' }
