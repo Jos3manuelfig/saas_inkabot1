@@ -26,3 +26,10 @@ class Subscription(Base, TimestampMixin):
 
     tenant: Mapped["Tenant"] = relationship(back_populates="subscription")
     plan: Mapped["Plan"] = relationship(back_populates="subscriptions")
+
+    @property
+    def plan_name(self) -> str | None:
+        """Devuelve el nombre del plan como string para SubscriptionOut."""
+        if self.plan and self.plan.name:
+            return self.plan.name.value  # PlanType enum → "Emprendedor" / "Profesional"
+        return None

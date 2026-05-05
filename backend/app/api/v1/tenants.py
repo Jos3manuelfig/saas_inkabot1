@@ -28,7 +28,7 @@ def _generate_password(length: int = 10) -> str:
 async def list_tenants(db: DB, _: AdminUser):
     result = await db.execute(
         select(Tenant)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
         .order_by(Tenant.created_at.desc())
     )
     tenants = result.scalars().all()
@@ -109,7 +109,7 @@ async def create_tenant(body: TenantCreate, db: DB, _: AdminUser):
     result = await db.execute(
         select(Tenant)
         .where(Tenant.id == tenant.id)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
     )
     tenant = result.scalar_one()
 
@@ -129,7 +129,7 @@ async def get_tenant(tenant_id: str, db: DB, current_user: CurrentUser):
     result = await db.execute(
         select(Tenant)
         .where(Tenant.id == tenant_id)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
     )
     tenant = result.scalar_one_or_none()
     if not tenant:
@@ -142,7 +142,7 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
     result = await db.execute(
         select(Tenant)
         .where(Tenant.id == tenant_id)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
     )
     tenant = result.scalar_one_or_none()
     if not tenant:
@@ -206,7 +206,7 @@ async def update_tenant(tenant_id: str, body: TenantUpdate, db: DB, _: AdminUser
     result = await db.execute(
         select(Tenant)
         .where(Tenant.id == tenant_id)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
     )
     tenant = result.scalar_one()
     return Response(data=TenantOut.model_validate(tenant).model_dump(), message="Tenant actualizado")
@@ -233,7 +233,7 @@ async def delete_tenant(tenant_id: str, db: DB, _: AdminUser):
     result = await db.execute(
         select(Tenant)
         .where(Tenant.id == tenant_id)
-        .options(selectinload(Tenant.subscription), selectinload(Tenant.whatsapp_numbers))
+        .options(selectinload(Tenant.subscription).selectinload(Subscription.plan), selectinload(Tenant.whatsapp_numbers))
     )
     tenant = result.scalar_one_or_none()
     if not tenant:

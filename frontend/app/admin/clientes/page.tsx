@@ -220,12 +220,9 @@ export default function ClientesPage() {
       if (editForm.expiryDate) payload.expiry_date = editForm.expiryDate
 
       await api.put(`/api/v1/tenants/${editClient.id}`, payload)
-      setClients(prev => prev.map(x =>
-        x.id === editClient.id
-          ? { ...x, name: editForm.name, email: editForm.email, phone: editForm.phone, plan: editForm.plan, expiryDate: editForm.expiryDate }
-          : x
-      ))
       setEditClient(null)
+      // Refetch completo para mostrar datos actualizados desde la BD (plan, fechas)
+      await loadClients()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al actualizar cliente')
     } finally { setSaving(false) }
