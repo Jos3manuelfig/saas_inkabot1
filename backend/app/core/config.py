@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
+    REDIS_URL: str = "redis://localhost:6379"
+
     ANTHROPIC_API_KEY: str = ""
     WEBHOOK_VERIFY_TOKEN: str = "inkabot_webhook_secret"
 

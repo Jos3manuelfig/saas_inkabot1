@@ -11,7 +11,8 @@ from app.models.conversation import Conversation, Message, MessageRole, Conversa
 from app.models.agent import VendedorAgent
 from app.services.meta_whatsapp import MetaWhatsAppService
 from app.services.anthropic_service import AnthropicService
-from app.services.intent_classifier import IntentClassifierService
+from app.services.intent_classifier import IntentClassifierService, detect_handoff_keywords
+from app.services import message_buffer
 
 logger = logging.getLogger(__name__)
 
@@ -50,30 +51,66 @@ async def receive_message(request: Request):
 
     async with AsyncSessionLocal() as db:
         for incoming in incoming_messages:
-            await _handle_incoming_message(db, incoming)
+            # 1. Buscar número registrado
+            result = await db.execute(
+                select(WhatsappNumber).where(
+                    WhatsappNumber.phone_number_id == incoming.phone_number_id
+                )
+            )
+            wa_number = result.scalar_one_or_none()
+            if not wa_number or not wa_number.access_token:
+                logger.warning("phone_number_id no registrado: %s", incoming.phone_number_id)
+                continue
+
+            # 2. Marcar como leído inmediatamente (doble check azul sin esperar al buffer)
+            meta = MetaWhatsAppService(incoming.phone_number_id, wa_number.access_token)
+            await meta.mark_as_read(incoming.message_id)
+
+            # 3. Agregar texto al buffer Redis y (re)iniciar timer de 7 segundos
+            from_phone = incoming.from_phone
+            phone_number_id = incoming.phone_number_id
+
+            await message_buffer.push_and_schedule(
+                phone=from_phone,
+                phone_number_id=phone_number_id,
+                text=incoming.text,
+                callback=lambda text, fp=from_phone, pnid=phone_number_id: (
+                    _process_buffered(fp, pnid, text)
+                ),
+            )
 
     return {"status": "ok"}
 
 
-async def _handle_incoming_message(db, incoming) -> None:
+async def _process_buffered(from_phone: str, phone_number_id: str, combined_text: str) -> None:
+    """Procesa los mensajes agrupados del buffer con su propia sesión de BD."""
+    async with AsyncSessionLocal() as db:
+        try:
+            await _handle_incoming_message(db, from_phone, phone_number_id, combined_text)
+        except Exception as e:
+            logger.error("Error en _process_buffered: %s", e, exc_info=True)
+            await db.rollback()
+
+
+async def _handle_incoming_message(
+    db, from_phone: str, phone_number_id: str, text: str
+) -> None:
     try:
         # 1. Buscar número registrado
         result = await db.execute(
-            select(WhatsappNumber).where(WhatsappNumber.phone_number_id == incoming.phone_number_id)
+            select(WhatsappNumber).where(WhatsappNumber.phone_number_id == phone_number_id)
         )
         wa_number = result.scalar_one_or_none()
         if not wa_number or not wa_number.access_token:
-            logger.warning(f"phone_number_id no registrado: {incoming.phone_number_id}")
             return
 
-        meta = MetaWhatsAppService(incoming.phone_number_id, wa_number.access_token)
-        await meta.mark_as_read(incoming.message_id)
+        meta = MetaWhatsAppService(phone_number_id, wa_number.access_token)
 
-        # 2. Buscar o crear conversación
+        # 2. Buscar o crear conversación activa
         conv_result = await db.execute(
             select(Conversation).where(
                 Conversation.whatsapp_number_id == wa_number.id,
-                Conversation.user_phone == incoming.from_phone,
+                Conversation.user_phone == from_phone,
                 Conversation.is_active == True,
             )
         )
@@ -83,20 +120,19 @@ async def _handle_incoming_message(db, incoming) -> None:
             conversation = Conversation(
                 tenant_id=wa_number.tenant_id,
                 whatsapp_number_id=wa_number.id,
-                user_phone=incoming.from_phone,
+                user_phone=from_phone,
                 status=ConversationStatus.active,
             )
             db.add(conversation)
             await db.flush()
         elif conversation.is_archived:
-            # Reactivar si el cliente escribe de nuevo
             conversation.is_archived = False
 
-        # Si ya fue derivada a humano, no responder más
+        # Si ya fue derivada a humano, no responder
         if conversation.status == ConversationStatus.human_handoff:
             return
 
-        # 3. Historial de mensajes
+        # 3. Historial de mensajes (últimos 20)
         history_result = await db.execute(
             select(Message)
             .where(Message.conversation_id == conversation.id)
@@ -114,7 +150,7 @@ async def _handle_incoming_message(db, incoming) -> None:
                 VendedorAgent.is_active == True,
             )
             .options(selectinload(VendedorAgent.training_blocks))
-            .order_by(VendedorAgent.is_default.desc())  # default primero
+            .order_by(VendedorAgent.is_default.desc())
             .limit(1)
         )
         agent = agent_result.scalar_one_or_none()
@@ -122,19 +158,17 @@ async def _handle_incoming_message(db, incoming) -> None:
         agent_prompt = agent.system_prompt if agent else None
         training_contents = [b.content for b in agent.training_blocks] if agent else []
 
-        # 5. Guardar mensaje del usuario
+        # 5. Guardar mensaje del usuario (texto combinado del buffer)
         db.add(Message(
             conversation_id=conversation.id,
             role=MessageRole.user,
-            content=incoming.text,
+            content=text,
         ))
 
-        # 6. Clasificar intención del mensaje actual (detección rápida por keywords)
+        # 6. Detectar si pide atención humana
         classifier = IntentClassifierService()
-        from app.services.intent_classifier import detect_handoff_keywords
 
-        if detect_handoff_keywords(incoming.text):
-            # Derivar a humano inmediatamente
+        if detect_handoff_keywords(text):
             reply_text = HANDOFF_MESSAGE
             conversation.status = ConversationStatus.human_handoff
             conversation.intent_summary = "Cliente solicitó atención humana"
@@ -143,15 +177,15 @@ async def _handle_incoming_message(db, incoming) -> None:
             # 7. Generar respuesta con Claude
             ai_service = AnthropicService()
             reply_text = await ai_service.generate_reply(
-                user_message=incoming.text,
+                user_message=text,
                 history=history,
                 agent_system_prompt=agent_prompt,
                 training_blocks=training_contents,
             )
 
-            # 8. Clasificar intención en background (sin bloquear)
+            # 8. Clasificar intención
             full_history = history + [
-                {"role": "user", "content": incoming.text},
+                {"role": "user", "content": text},
                 {"role": "assistant", "content": reply_text},
             ]
             status, summary = await classifier.classify(full_history)
@@ -171,8 +205,8 @@ async def _handle_incoming_message(db, incoming) -> None:
         await db.commit()
 
         # 10. Enviar por WhatsApp
-        await meta.send_text_message(to=incoming.from_phone, text=reply_text)
+        await meta.send_text_message(to=from_phone, text=reply_text)
 
     except Exception as e:
-        logger.error(f"Error procesando mensaje: {e}", exc_info=True)
+        logger.error("Error procesando mensaje: %s", e, exc_info=True)
         await db.rollback()
