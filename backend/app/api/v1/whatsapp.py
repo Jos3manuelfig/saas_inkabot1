@@ -17,7 +17,7 @@ META_API_BASE = "https://graph.facebook.com/v19.0"
 class WhatsappNumberCreate(BaseModel):
     phone_number: str
     phone_number_id: str
-    access_token: str
+    access_token: str | None = None  # None = mantener el token existente en actualizaciones
     display_name: str | None = None
 
 
@@ -101,25 +101,31 @@ async def get_number(tenant_id: str, db: DB, _: AdminUser):
 async def save_number(tenant_id: str, body: WhatsappNumberCreate, db: DB, _: AdminUser):
     """Guarda (crea o actualiza) el número WABA y verifica contra Meta."""
 
-    # 1. Verificar credenciales con Meta
-    verification = await _verify_meta_credentials(body.phone_number_id, body.access_token)
-    new_status = (
-        WhatsappConnectionStatus.connected
-        if verification["valid"]
-        else WhatsappConnectionStatus.disconnected
-    )
-
     # 2. Buscar número existente para este tenant
     result = await db.execute(
         select(WhatsappNumber).where(WhatsappNumber.tenant_id == tenant_id).limit(1)
     )
     number = result.scalar_one_or_none()
 
+    # Determinar el token a usar: nuevo si se envía, o el existente si no
+    token_to_use = body.access_token if body.access_token else (number.access_token if number else None)
+    if not token_to_use:
+        raise HTTPException(status_code=400, detail="Se requiere un Access Token para la primera configuración")
+
+    # 1. Verificar credenciales con Meta usando el token efectivo
+    verification = await _verify_meta_credentials(body.phone_number_id, token_to_use)
+    new_status = (
+        WhatsappConnectionStatus.connected
+        if verification["valid"]
+        else WhatsappConnectionStatus.disconnected
+    )
+
     if number:
-        # Actualizar
+        # Actualizar — solo sobreescribir el token si se envió uno nuevo
         number.phone_number = body.phone_number
         number.phone_number_id = body.phone_number_id
-        number.access_token = body.access_token
+        if body.access_token:
+            number.access_token = body.access_token
         number.display_name = body.display_name or verification.get("display_name") or number.display_name
         number.status = new_status
         number.bot_active = verification["valid"]
@@ -129,7 +135,7 @@ async def save_number(tenant_id: str, body: WhatsappNumberCreate, db: DB, _: Adm
             tenant_id=tenant_id,
             phone_number=body.phone_number,
             phone_number_id=body.phone_number_id,
-            access_token=body.access_token,
+            access_token=token_to_use,
             display_name=body.display_name or verification.get("display_name"),
             status=new_status,
             bot_active=verification["valid"],

@@ -148,7 +148,8 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
     setForm(f => ({ ...f, [k]: e.target.value }))
 
   async function handleSave() {
-    if (!form.phone_number || !form.phone_number_id || !form.access_token) return
+    if (!form.phone_number || !form.phone_number_id) return
+    if (!form.access_token && !existing) return  // token requerido solo en primera configuración
     setSaving(true)
     setResult(null)
     try {
@@ -158,7 +159,7 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
         body: JSON.stringify({
           phone_number: form.phone_number,
           phone_number_id: form.phone_number_id,
-          access_token: form.access_token,
+          access_token: form.access_token || null,  // null = mantener el token existente
           display_name: form.display_name || null,
         }),
       })
