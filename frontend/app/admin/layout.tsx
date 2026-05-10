@@ -10,6 +10,7 @@ import type { User } from '@/types'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const session = getSession()
@@ -24,10 +25,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      <Sidebar role="admin" />
-      <Navbar user={user} />
-      <main className="ml-60 pt-16 min-h-screen">
-        <div className="p-6">{children}</div>
+      <Sidebar role="admin" isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Navbar user={user} onMenuClick={() => setSidebarOpen(o => !o)} />
+      <main className="md:ml-60 pt-16 min-h-screen">
+        <div className="p-4 md:p-6">{children}</div>
       </main>
     </div>
   )
