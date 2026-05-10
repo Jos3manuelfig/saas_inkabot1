@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { MessageSquare, Search, Bot, User, Loader2, Phone, RefreshCw, Archive, ArchiveRestore } from 'lucide-react'
+import { MessageSquare, Search, Bot, User, Loader2, Phone, RefreshCw, Archive, ArchiveRestore, ArrowLeft } from 'lucide-react'
 import { getSession } from '@/lib/auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
@@ -91,6 +91,7 @@ export default function ConversacionesPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<ConvStatus | ''>('')
   const [showArchived, setShowArchived] = useState(false)
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const session = getSession()
@@ -102,6 +103,7 @@ export default function ConversacionesPage() {
     setLoadingList(true)
     setSelected(null)
     setDetail(null)
+    setMobileView('list')
     try {
       const res = await fetch(
         `${BASE_URL}/api/v1/conversations/${tenantId}?archived=${archived}`,
@@ -140,6 +142,7 @@ export default function ConversacionesPage() {
   function selectConv(id: string) {
     setSelected(id)
     fetchDetail(id)
+    setMobileView('detail')
   }
 
   const filtered = conversations.filter(c => {
@@ -157,7 +160,6 @@ export default function ConversacionesPage() {
         `${BASE_URL}/api/v1/conversations/${tenantId}/${convId}/archive?archive=${archive}`,
         { method: 'PATCH', headers }
       )
-      // Refrescar la lista y deseleccionar
       fetchConversations(showArchived)
     } catch (e) {
       console.error('[archive]', e)
@@ -166,6 +168,7 @@ export default function ConversacionesPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] animate-fadeIn">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-[#E8EAF0]">Conversaciones</h1>
@@ -183,26 +186,41 @@ export default function ConversacionesPage() {
             }`}
           >
             <Archive size={13} />
-            {showArchived ? 'Ver activas' : 'Ver archivadas'}
+            <span className="hidden sm:inline">{showArchived ? 'Ver activas' : 'Ver archivadas'}</span>
           </button>
-          <button onClick={() => fetchConversations(showArchived)} className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
-            <RefreshCw size={13} /> Actualizar
+          <button
+            onClick={() => fetchConversations(showArchived)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer"
+          >
+            <RefreshCw size={13} />
+            <span className="hidden sm:inline">Actualizar</span>
           </button>
         </div>
       </div>
 
       <div className="flex flex-1 gap-4 min-h-0">
+
         {/* ── Panel izquierdo: lista ─────────────────────── */}
-        <div className="flex flex-col w-80 shrink-0 bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
+        <div className={`flex-col bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden
+          w-full md:w-80 md:shrink-0
+          ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}
+        `}>
           {/* Búsqueda y filtro */}
           <div className="p-3 border-b border-[#2A2F42] space-y-2">
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por teléfono o mensaje..."
-                className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] placeholder:text-[#6B7280] focus:outline-none focus:border-[#7B61FF]" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar por teléfono o mensaje..."
+                className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] placeholder:text-[#6B7280] focus:outline-none focus:border-[#7B61FF]"
+              />
             </div>
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as ConvStatus | '')}
-              className="w-full px-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]">
+            <select
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value as ConvStatus | '')}
+              className="w-full px-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]"
+            >
               <option value="">Todos los estados</option>
               {(Object.keys(STATUS_CONFIG) as ConvStatus[]).map(s => (
                 <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
@@ -213,13 +231,21 @@ export default function ConversacionesPage() {
           {/* Lista */}
           <div className="flex-1 overflow-y-auto divide-y divide-[#1C2030]">
             {loadingList ? (
-              <div className="flex justify-center py-10"><Loader2 size={18} className="animate-spin text-[#7B61FF]" /></div>
+              <div className="flex justify-center py-10">
+                <Loader2 size={18} className="animate-spin text-[#7B61FF]" />
+              </div>
             ) : filtered.length === 0 ? (
               <div className="py-10 text-center text-xs text-[#6B7280]">Sin conversaciones</div>
             ) : filtered.map(conv => {
               const isSelected = conv.id === selected
               return (
-                <button key={conv.id} onClick={() => selectConv(conv.id)} className={`w-full text-left px-4 py-3.5 transition-colors cursor-pointer ${isSelected ? 'bg-[#7B61FF]/10 border-l-2 border-[#7B61FF]' : 'hover:bg-[#1C2030]'}`}>
+                <button
+                  key={conv.id}
+                  onClick={() => selectConv(conv.id)}
+                  className={`w-full text-left px-4 py-3.5 transition-colors cursor-pointer ${
+                    isSelected ? 'bg-[#7B61FF]/10 border-l-2 border-[#7B61FF]' : 'hover:bg-[#1C2030]'
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0D0F14]">
@@ -256,14 +282,25 @@ export default function ConversacionesPage() {
         </div>
 
         {/* ── Panel derecho: hilo de mensajes ───────────── */}
-        <div className="flex-1 min-w-0 bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden flex flex-col">
+        <div className={`flex-col flex-1 min-w-0 bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden
+          ${mobileView === 'detail' ? 'flex' : 'hidden md:flex'}
+        `}>
           {!selected ? (
             <EmptyThread />
           ) : (
             <>
               {/* Header del chat */}
-              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#2A2F42] bg-[#0D0F14]">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#7B61FF]/15">
+              <div className="flex items-center gap-3 px-4 md:px-5 py-3.5 border-b border-[#2A2F42] bg-[#0D0F14]">
+                {/* Botón volver — solo mobile */}
+                <button
+                  onClick={() => setMobileView('list')}
+                  className="md:hidden p-1.5 rounded-lg text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer shrink-0"
+                  aria-label="Volver a la lista"
+                >
+                  <ArrowLeft size={17} />
+                </button>
+
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#7B61FF]/15 shrink-0">
                   <Phone size={16} className="text-[#7B61FF]" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -287,7 +324,9 @@ export default function ConversacionesPage() {
               {/* Mensajes */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: '#0e1621' }}>
                 {loadingDetail ? (
-                  <div className="flex justify-center py-10"><Loader2 size={18} className="animate-spin text-[#7B61FF]" /></div>
+                  <div className="flex justify-center py-10">
+                    <Loader2 size={18} className="animate-spin text-[#7B61FF]" />
+                  </div>
                 ) : !detail || detail.messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-2 py-10">
                     <p className="text-xs text-[#6B7280]">Esta conversación no tiene mensajes</p>
@@ -325,11 +364,12 @@ export default function ConversacionesPage() {
               {/* Footer informativo */}
               <div className="px-5 py-2.5 border-t border-[#2A2F42] bg-[#0D0F14] flex items-center justify-between">
                 <p className="text-[10px] text-[#6B7280]">{detail?.messages.length ?? 0} mensajes en esta conversación</p>
-                <p className="text-[10px] text-[#6B7280]">Solo lectura — los mensajes son enviados por WhatsApp</p>
+                <p className="text-[10px] text-[#6B7280] hidden sm:block">Solo lectura — los mensajes son enviados por WhatsApp</p>
               </div>
             </>
           )}
         </div>
+
       </div>
     </div>
   )
