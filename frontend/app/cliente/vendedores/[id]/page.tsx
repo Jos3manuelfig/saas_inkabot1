@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Plus, Trash2, Send, Bot, User, Loader2, BookOpen, MessageSquare, Check } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Send, Bot, User, Loader2, BookOpen, MessageSquare, Check, Pencil, X } from 'lucide-react'
 import { getSession } from '@/lib/auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
@@ -31,6 +31,9 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
   const [newBlock, setNewBlock] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   const [userInput, setUserInput] = useState('')
   const [responding, setResponding] = useState(false)
@@ -91,6 +94,40 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
     if (success) {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+    }
+  }
+
+  function startEdit(block: TrainingBlock) {
+    setEditingId(block.id)
+    setEditContent(block.content)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditContent('')
+  }
+
+  async function saveEdit(blockId: string) {
+    if (!editContent.trim()) return
+    setEditSaving(true)
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}/training/${blockId}`, {
+        method: 'PUT', headers, body: JSON.stringify({ content: editContent.trim() }),
+      })
+      if (res.ok) {
+        setAgent(prev => prev ? {
+          ...prev,
+          training_blocks: prev.training_blocks.map(b => b.id === blockId ? { ...b, content: editContent.trim() } : b),
+        } : prev)
+        setEditingId(null)
+        setEditContent('')
+      } else {
+        console.error('[training] PUT failed', res.status)
+      }
+    } catch (e) {
+      console.error('[training] update error', e)
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -178,7 +215,7 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
             ) : [...agent.training_blocks].reverse().map((block, i) => (
               <Box key={block.id}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-medium text-[#7B61FF] bg-[#7B61FF]/10 px-2 py-0.5 rounded-full border border-[#7B61FF]/20">
                         Bloque {agent.training_blocks.length - i}
@@ -187,11 +224,56 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
                         {new Date(block.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </span>
                     </div>
-                    <p className="text-sm text-[#E8EAF0] leading-relaxed whitespace-pre-wrap">{block.content}</p>
+
+                    {editingId === block.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editContent}
+                          onChange={e => setEditContent(e.target.value)}
+                          rows={4}
+                          className="w-full px-3 py-2.5 text-sm rounded-xl resize-none bg-[#0D0F14] border border-[#7B61FF]/50 text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]"
+                          autoFocus
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => saveEdit(block.id)}
+                            disabled={editSaving || !editContent.trim()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl bg-[#7B61FF] hover:bg-[#5B41DF] text-white font-semibold disabled:opacity-40 transition-colors cursor-pointer"
+                          >
+                            {editSaving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                            Guardar
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer"
+                          >
+                            <X size={11} /> Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[#E8EAF0] leading-relaxed whitespace-pre-wrap">{block.content}</p>
+                    )}
                   </div>
-                  <button onClick={() => deleteBlock(block.id)} className="shrink-0 p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
-                    <Trash2 size={14} />
-                  </button>
+
+                  {editingId !== block.id && (
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={() => startEdit(block)}
+                        className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#7B61FF] hover:bg-[#7B61FF]/10 transition-colors cursor-pointer"
+                        title="Editar bloque"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => deleteBlock(block.id)}
+                        className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer"
+                        title="Eliminar bloque"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </Box>
             ))}

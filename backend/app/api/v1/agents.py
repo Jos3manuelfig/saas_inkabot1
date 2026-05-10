@@ -137,6 +137,23 @@ async def add_training_block(
     return Response(data=TrainingBlockOut.model_validate(block).model_dump(), message="Bloque de entrenamiento guardado", status=201)
 
 
+@router.put("/{tenant_id}/{agent_id}/training/{block_id}", response_model=Response)
+async def update_training_block(
+    tenant_id: str, agent_id: str, block_id: str, body: TrainingBlockCreate, db: DB, current_user: CurrentUser
+):
+    _check_tenant_access(current_user, tenant_id)
+    result = await db.execute(
+        select(TrainingBlock).where(TrainingBlock.id == block_id, TrainingBlock.agent_id == agent_id)
+    )
+    block = result.scalar_one_or_none()
+    if not block:
+        raise HTTPException(status_code=404, detail="Bloque no encontrado")
+    block.content = body.content
+    await db.commit()
+    await db.refresh(block)
+    return Response(data=TrainingBlockOut.model_validate(block).model_dump(), message="Bloque actualizado")
+
+
 @router.delete("/{tenant_id}/{agent_id}/training/{block_id}", response_model=Response)
 async def delete_training_block(
     tenant_id: str, agent_id: str, block_id: str, db: DB, current_user: CurrentUser
