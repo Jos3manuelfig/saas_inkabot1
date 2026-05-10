@@ -3,15 +3,19 @@ import type { User } from '@/types'
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
 export async function login(email: string, password: string): Promise<{ user: User; token: string }> {
-  const res = await fetch(`${API_URL}/api/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-
-  if (!res.ok) {
-    throw new Error('Credenciales incorrectas')
+  let res: Response
+  try {
+    res = await fetch(`${API_URL}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+  } catch {
+    throw new Error('NETWORK_ERROR')
   }
+
+  if (res.status === 401) throw new Error('INVALID_CREDENTIALS')
+  if (!res.ok) throw new Error('SERVER_ERROR')
 
   const json = await res.json()
   const token: string = json.data.access_token

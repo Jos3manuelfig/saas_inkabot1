@@ -13,6 +13,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const ERROR_MESSAGES: Record<string, string> = {
+    INVALID_CREDENTIALS: 'Correo o contraseña incorrectos. Intenta de nuevo.',
+    NETWORK_ERROR: 'No se pudo conectar al servidor. Intenta más tarde.',
+    SERVER_ERROR: 'Error del servidor. Intenta más tarde.',
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError('')
@@ -22,11 +28,16 @@ export default function LoginPage() {
       saveSession(result.user, result.token)
       if (result.user.role === 'admin') router.push('/admin/dashboard')
       else router.push('/cliente/dashboard')
-    } catch {
-      setError('Credenciales incorrectas. Intenta de nuevo.')
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      setError(ERROR_MESSAGES[code] ?? 'Correo o contraseña incorrectos. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }
+  }
+
+  function clearError() {
+    if (error) setError('')
   }
 
   return (
@@ -56,7 +67,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); clearError() }}
                 placeholder="admin@inkabot.pe"
                 required
                 className="w-full rounded-lg border border-[#1e1e30] bg-[#0f0f1a] px-3.5 py-2.5 text-sm text-[#e8e8f0] placeholder:text-[#4a4a6a] focus:border-[#6c3fff] focus:outline-none focus:ring-1 focus:ring-[#6c3fff] transition-colors"
@@ -69,7 +80,7 @@ export default function LoginPage() {
                 <input
                   type={showPass ? 'text' : 'password'}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => { setPassword(e.target.value); clearError() }}
                   placeholder="••••••••"
                   required
                   className="w-full rounded-lg border border-[#1e1e30] bg-[#0f0f1a] px-3.5 py-2.5 pr-10 text-sm text-[#e8e8f0] placeholder:text-[#4a4a6a] focus:border-[#6c3fff] focus:outline-none focus:ring-1 focus:ring-[#6c3fff] transition-colors"
