@@ -117,6 +117,19 @@ async def _handle_incoming_message(
         conversation = conv_result.scalar_one_or_none()
 
         if not conversation:
+            # Verificar si este número ya tuvo una conversación cerrada o derivada en este tenant
+            prev_result = await db.execute(
+                select(Conversation).where(
+                    Conversation.tenant_id == wa_number.tenant_id,
+                    Conversation.user_phone == from_phone,
+                    Conversation.status.in_([
+                        ConversationStatus.sale_closed,
+                        ConversationStatus.human_handoff,
+                    ]),
+                ).limit(1)
+            )
+            previous = prev_result.scalar_one_or_none()
+
             conversation = Conversation(
                 tenant_id=wa_number.tenant_id,
                 whatsapp_number_id=wa_number.id,
@@ -125,6 +138,21 @@ async def _handle_incoming_message(
             )
             db.add(conversation)
             await db.flush()
+
+            if previous:
+                # Usuario recurrente — respuesta directa sin pasar por Claude
+                reply_text = (
+                    "¡Hola de nuevo! Ya tenemos tus datos registrados. "
+                    "El equipo de INKABOT se pondrá en contacto contigo pronto. "
+                    "¿Tienes alguna consulta adicional?"
+                )
+                db.add(Message(conversation_id=conversation.id, role=MessageRole.user, content=text))
+                db.add(Message(conversation_id=conversation.id, role=MessageRole.assistant, content=reply_text))
+                conversation.last_message_at = datetime.now(timezone.utc)
+                await db.commit()
+                await meta.send_text_message(to=from_phone, text=reply_text)
+                return
+
         elif conversation.is_archived:
             conversation.is_archived = False
 
