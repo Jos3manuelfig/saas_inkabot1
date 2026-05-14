@@ -9,7 +9,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-BUFFER_DELAY_SECONDS = 7
+BUFFER_DELAY_SECONDS = 3
 
 _redis: Redis | None = None
 _pending_tasks: dict[str, asyncio.Task] = {}
