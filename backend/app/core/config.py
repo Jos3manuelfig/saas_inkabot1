@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     REDIS_URL: str = "redis://localhost:6379"
+    SPAM_MAX_MESSAGES: int = 10   # máx mensajes permitidos por ventana
+    SPAM_WINDOW_SECONDS: int = 60  # ventana de tiempo en segundos
+    SPAM_MUTE_SECONDS: int = 300   # duración del silencio en segundos
 
     ANTHROPIC_API_KEY: str = ""
     WEBHOOK_VERIFY_TOKEN: str = "inkabot_webhook_secret"

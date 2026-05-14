@@ -12,6 +12,7 @@ class IncomingMessage:
     message_id: str
     text: str
     timestamp: str
+    message_type: str = "text"  # text | audio | image | sticker | location | document | video
 
 
 class MetaWhatsAppService:
@@ -55,8 +56,8 @@ class MetaWhatsAppService:
 
     @staticmethod
     def parse_webhook_payload(payload: dict) -> list[IncomingMessage]:
-        """Extrae los mensajes de texto del payload del webhook de Meta.
-        Ignora mensajes de tipo multimedia, reacciones, etc."""
+        """Extrae todos los mensajes del payload del webhook de Meta.
+        Incluye mensajes multimedia para poder responderles apropiadamente."""
         messages: list[IncomingMessage] = []
 
         for entry in payload.get("entry", []):
@@ -65,15 +66,16 @@ class MetaWhatsAppService:
                 phone_number_id = value.get("metadata", {}).get("phone_number_id", "")
 
                 for msg in value.get("messages", []):
-                    if msg.get("type") != "text":
-                        continue
+                    msg_type = msg.get("type", "text")
+                    text = msg.get("text", {}).get("body", "") if msg_type == "text" else ""
                     messages.append(
                         IncomingMessage(
                             phone_number_id=phone_number_id,
                             from_phone=msg["from"],
                             message_id=msg["id"],
-                            text=msg["text"]["body"],
+                            text=text,
                             timestamp=msg.get("timestamp", ""),
+                            message_type=msg_type,
                         )
                     )
         return messages

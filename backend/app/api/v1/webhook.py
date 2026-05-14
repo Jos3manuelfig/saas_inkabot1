@@ -24,6 +24,36 @@ HANDOFF_MESSAGE = (
     "¡Gracias por contactarnos!"
 )
 
+NON_TEXT_REPLY = (
+    "Lo siento, por ahora solo puedo procesar mensajes de texto 😊 "
+    "¿En qué te puedo ayudar?"
+)
+
+CONSECUTIVE_LIMIT_REPLY = (
+    "Parece que estás teniendo problemas para comunicarte. "
+    "¿Te gustaría hablar con un asesor? "
+    "Escribe *humano* para conectarte con alguien del equipo."
+)
+
+SPAM_REPLY = (
+    "Estás enviando muchos mensajes muy rápido. "
+    "Por favor espera unos minutos antes de continuar 🙏"
+)
+
+# Tipos de mensaje que Meta envía pero que no podemos procesar
+NON_TEXT_TYPES = {"audio", "image", "sticker", "location", "document", "video", "reaction"}
+
+CLOSING_MESSAGES = {
+    ConversationStatus.sale_closed: (
+        "¡Gracias por elegirnos! 🎉 Estaremos en contacto contigo pronto "
+        "para coordinar los detalles. ¡Que tengas un excelente día!"
+    ),
+    ConversationStatus.sale_lost: (
+        "Entendido, no hay problema 😊 Si en algún momento necesitas nuestros "
+        "servicios, aquí estaremos. ¡Hasta pronto!"
+    ),
+}
+
 
 # ── Verificación del webhook ────────────────────────────────────────────────
 
@@ -62,14 +92,29 @@ async def receive_message(request: Request):
                 logger.warning("phone_number_id no registrado: %s", incoming.phone_number_id)
                 continue
 
-            # 2. Marcar como leído inmediatamente (doble check azul sin esperar al buffer)
             meta = MetaWhatsAppService(incoming.phone_number_id, wa_number.access_token)
-            await meta.mark_as_read(incoming.message_id)
-
-            # 3. Agregar texto al buffer Redis y (re)iniciar timer de 7 segundos
             from_phone = incoming.from_phone
             phone_number_id = incoming.phone_number_id
 
+            # 2. Marcar como leído inmediatamente (doble check azul)
+            await meta.mark_as_read(incoming.message_id)
+
+            # Feature 1: mensajes no textuales — responder y continuar
+            if incoming.message_type in NON_TEXT_TYPES:
+                await meta.send_text_message(to=from_phone, text=NON_TEXT_REPLY)
+                continue
+
+            # Feature 4: anti-spam via Redis
+            spam_status = await message_buffer.check_spam(from_phone, phone_number_id)
+            if spam_status == "muted":
+                logger.info("[spam] número silenciado: %s", from_phone)
+                continue
+            if spam_status == "limit_reached":
+                logger.warning("[spam] límite alcanzado: %s", from_phone)
+                await meta.send_text_message(to=from_phone, text=SPAM_REPLY)
+                continue
+
+            # 3. Agregar al buffer Redis y (re)iniciar timer de 3 segundos
             await message_buffer.push_and_schedule(
                 phone=from_phone,
                 phone_number_id=phone_number_id,
@@ -117,7 +162,7 @@ async def _handle_incoming_message(
         conversation = conv_result.scalar_one_or_none()
 
         if not conversation:
-            # Verificar si este número ya tuvo una conversación cerrada o derivada en este tenant
+            # Verificar si ya tuvo una conversación cerrada o derivada
             prev_result = await db.execute(
                 select(Conversation).where(
                     Conversation.tenant_id == wa_number.tenant_id,
@@ -140,7 +185,6 @@ async def _handle_incoming_message(
             await db.flush()
 
             if previous:
-                # Usuario recurrente — respuesta directa sin pasar por Claude
                 reply_text = (
                     "¡Hola de nuevo! Ya tenemos tus datos registrados. "
                     "El equipo de INKABOT se pondrá en contacto contigo pronto. "
@@ -170,6 +214,22 @@ async def _handle_incoming_message(
         recent = list(reversed(history_result.scalars().all()))
         history = [{"role": m.role.value, "content": m.content} for m in recent]
 
+        # Feature 2: mensajes consecutivos del usuario sin respuesta del bot
+        consecutive_user = 0
+        for msg in reversed(history):
+            if msg["role"] == "user":
+                consecutive_user += 1
+            else:
+                break
+
+        if consecutive_user >= 5:
+            db.add(Message(conversation_id=conversation.id, role=MessageRole.user, content=text))
+            db.add(Message(conversation_id=conversation.id, role=MessageRole.assistant, content=CONSECUTIVE_LIMIT_REPLY))
+            conversation.last_message_at = datetime.now(timezone.utc)
+            await db.commit()
+            await meta.send_text_message(to=from_phone, text=CONSECUTIVE_LIMIT_REPLY)
+            return
+
         # 4. Cargar agente — primero el default, si no el primero activo
         agent_result = await db.execute(
             select(VendedorAgent)
@@ -186,7 +246,7 @@ async def _handle_incoming_message(
         agent_prompt = agent.system_prompt if agent else None
         training_contents = [b.content for b in agent.training_blocks] if agent else []
 
-        # 5. Guardar mensaje del usuario (texto combinado del buffer)
+        # 5. Guardar mensaje del usuario
         db.add(Message(
             conversation_id=conversation.id,
             role=MessageRole.user,
@@ -195,6 +255,7 @@ async def _handle_incoming_message(
 
         # 6. Detectar si pide atención humana
         classifier = IntentClassifierService()
+        closing_text: str | None = None
 
         if detect_handoff_keywords(text):
             reply_text = HANDOFF_MESSAGE
@@ -222,18 +283,28 @@ async def _handle_incoming_message(
                 conversation.intent_summary = summary
                 if status in ("sale_closed", "sale_lost"):
                     conversation.is_active = False
+                    # Feature 3: mensaje de cierre según resultado
+                    closing_text = CLOSING_MESSAGES.get(conversation.status)
 
-        # 9. Guardar respuesta y actualizar timestamp
+        # 9. Guardar respuesta del bot (y cierre si aplica)
         db.add(Message(
             conversation_id=conversation.id,
             role=MessageRole.assistant,
             content=reply_text,
         ))
+        if closing_text:
+            db.add(Message(
+                conversation_id=conversation.id,
+                role=MessageRole.assistant,
+                content=closing_text,
+            ))
         conversation.last_message_at = datetime.now(timezone.utc)
         await db.commit()
 
         # 10. Enviar por WhatsApp
         await meta.send_text_message(to=from_phone, text=reply_text)
+        if closing_text:
+            await meta.send_text_message(to=from_phone, text=closing_text)
 
     except Exception as e:
         logger.error("Error procesando mensaje: %s", e, exc_info=True)

@@ -38,7 +38,8 @@ class AnthropicService:
             "- Responde siempre basándote en la información anterior.\n"
             "- Si no tienes información sobre algo, dilo con amabilidad.\n"
             "- Sé conciso, amigable y profesional.\n"
-            "- Responde en el mismo idioma que el cliente."
+            "\nIMPORTANTE: Detecta el idioma del usuario y responde siempre "
+            "en el mismo idioma que él usa."
         )
         return "\n\n".join(parts)
 

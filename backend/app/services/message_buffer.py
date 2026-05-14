@@ -7,6 +7,11 @@ from redis.asyncio import Redis
 
 from app.core.config import settings
 
+# Anti-spam: límites configurables desde .env
+SPAM_MAX_MESSAGES = settings.SPAM_MAX_MESSAGES
+SPAM_WINDOW_SECONDS = settings.SPAM_WINDOW_SECONDS
+SPAM_MUTE_SECONDS = settings.SPAM_MUTE_SECONDS
+
 logger = logging.getLogger(__name__)
 
 BUFFER_DELAY_SECONDS = 3
@@ -80,3 +85,39 @@ async def _flush_after_delay(
     except Exception:
         logger.error("[buffer] error al procesar key=%s", task_key, exc_info=True)
         _pending_tasks.pop(task_key, None)
+
+
+# ── Anti-spam ────────────────────────────────────────────────────────────────
+
+def _rate_key(phone_number_id: str, phone: str) -> str:
+    return f"inkabot:rate:{phone_number_id}:{phone}"
+
+
+def _mute_key(phone_number_id: str, phone: str) -> str:
+    return f"inkabot:muted:{phone_number_id}:{phone}"
+
+
+async def check_spam(phone: str, phone_number_id: str) -> str:
+    """Verifica si el número está en período de silencio o supera el límite.
+
+    Retorna:
+    - "ok"            → procesar normalmente
+    - "muted"         → número silenciado, ignorar sin responder
+    - "limit_reached" → se acaba de superar el límite, responder con aviso una vez
+    """
+    r = _get_redis()
+
+    if await r.exists(_mute_key(phone_number_id, phone)):
+        return "muted"
+
+    rate_key = _rate_key(phone_number_id, phone)
+    count = await r.incr(rate_key)
+    if count == 1:
+        await r.expire(rate_key, SPAM_WINDOW_SECONDS)
+
+    if count > SPAM_MAX_MESSAGES:
+        await r.setex(_mute_key(phone_number_id, phone), SPAM_MUTE_SECONDS, "1")
+        await r.delete(rate_key)
+        return "limit_reached"
+
+    return "ok"
