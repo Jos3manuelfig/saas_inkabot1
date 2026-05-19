@@ -349,6 +349,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const days = endDate ? Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000) : 0
 
   return (
+    <>
     {/* Modal de confirmación reset demo */}
     {showResetModal && (
       <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
@@ -511,5 +512,6 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         </Box>
       )}
     </div>
+    </>
   )
 }
