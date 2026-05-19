@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, Phone, MessageSquare, Bot, PlusCircle, CheckCircle,
   Wifi, WifiOff, AlertCircle, Eye, EyeOff, Loader2, Save, RefreshCw,
+  RotateCcw, X, AlertTriangle,
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { KPICard } from '@/components/ui/KPICard'
@@ -296,6 +297,31 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   const session = getSession()
   const token = session?.token ?? ''
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function handleResetDemo() {
+    setResetting(true)
+    setResetMsg(null)
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/tenants/${id}/reset-demo`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setResetMsg({ ok: true, text: json.message ?? 'Cliente demo reseteado correctamente' })
+      } else {
+        setResetMsg({ ok: false, text: json.detail ?? 'Error al resetear el cliente' })
+      }
+    } catch {
+      setResetMsg({ ok: false, text: 'Error de conexión' })
+    } finally {
+      setResetting(false)
+      setShowResetModal(false)
+    }
+  }
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/v1/tenants/${id}`, {
@@ -323,15 +349,68 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const days = endDate ? Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000) : 0
 
   return (
+    {/* Modal de confirmación reset demo */}
+    {showResetModal && (
+      <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-6 max-w-md w-full shadow-2xl">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15">
+              <AlertTriangle size={20} className="text-orange-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-[#E8EAF0]">Resetear cliente demo</h3>
+              <p className="text-sm text-[#6B7280] mt-1">
+                ¿Estás seguro? Esto eliminará <span className="text-[#E8EAF0] font-medium">todo el historial y entrenamiento</span> de este cliente. Esta acción no se puede deshacer.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <button
+              onClick={() => setShowResetModal(false)}
+              className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleResetDemo}
+              disabled={resetting}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {resetting ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+              Sí, resetear
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div className="space-y-5 animate-fadeIn">
       {/* Cabecera */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
         <button onClick={() => router.back()} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] rounded-xl transition-colors cursor-pointer">
           <ArrowLeft size={14} /> Volver
         </button>
         <div>
           <h1 className="text-xl font-bold text-[#E8EAF0]">{name}</h1>
           <p className="text-sm text-[#6B7280]">{email}</p>
+        </div>
+        </div>
+
+        {/* Botón reset demo + mensaje resultado */}
+        <div className="flex flex-col items-end gap-1.5">
+          <button
+            onClick={() => { setResetMsg(null); setShowResetModal(true) }}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl border border-orange-500/40 text-orange-400 hover:bg-orange-500/10 transition-colors cursor-pointer font-medium"
+          >
+            <RotateCcw size={14} /> Resetear cliente demo
+          </button>
+          {resetMsg && (
+            <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg ${resetMsg.ok ? 'bg-[#00E5A0]/10 text-[#00E5A0]' : 'bg-[#FF4D6A]/10 text-[#FF4D6A]'}`}>
+              {resetMsg.ok ? <CheckCircle size={12} /> : <X size={12} />}
+              {resetMsg.text}
+            </div>
+          )}
         </div>
       </div>
 

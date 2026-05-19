@@ -4,12 +4,16 @@ from datetime import date
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from redis.asyncio import Redis
 from app.api.deps import DB, AdminUser, CurrentUser
+from app.core.config import settings
 from app.models.tenant import Tenant
 from app.models.user import User, UserRole
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.agent import VendedorAgent
 from app.models.plan import Plan
+from app.models.conversation import Conversation
+from app.models.whatsapp import WhatsappNumber
 from app.core.security import hash_password
 from app.models.user import UserRole
 from app.schemas.tenant import TenantCreate, TenantUpdate, TenantOut, TenantCreateResponse
@@ -242,3 +246,54 @@ async def delete_tenant(tenant_id: str, db: DB, _: AdminUser):
     await db.delete(tenant)
     await db.commit()
     return Response(data=None, message="Cliente eliminado")
+
+
+@router.delete("/{tenant_id}/reset-demo", response_model=Response)
+async def reset_demo_client(tenant_id: str, db: DB, _: AdminUser):
+    """Resetea un cliente demo: borra entrenamiento, conversaciones y claves Redis."""
+
+    # 1. Eliminar bloques de entrenamiento y resetear nombre del agente
+    agents_result = await db.execute(
+        select(VendedorAgent)
+        .where(VendedorAgent.tenant_id == tenant_id)
+        .options(selectinload(VendedorAgent.training_blocks))
+    )
+    agents = agents_result.scalars().all()
+    for agent in agents:
+        for block in list(agent.training_blocks):
+            await db.delete(block)
+        agent.name = "Demo INKABOT"
+
+    # 2. Eliminar todas las conversaciones (cascade elimina mensajes automáticamente)
+    convs_result = await db.execute(
+        select(Conversation).where(Conversation.tenant_id == tenant_id)
+    )
+    for conv in convs_result.scalars().all():
+        await db.delete(conv)
+
+    # 3. Obtener phone_number_ids antes del commit para limpiar Redis
+    wa_result = await db.execute(
+        select(WhatsappNumber).where(WhatsappNumber.tenant_id == tenant_id)
+    )
+    wa_numbers = wa_result.scalars().all()
+    phone_number_ids = [w.phone_number_id for w in wa_numbers]
+
+    await db.commit()
+
+    # 4. Limpiar claves Redis del buffer y anti-spam para este tenant
+    if phone_number_ids:
+        redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        try:
+            for pnid in phone_number_ids:
+                for pattern in [
+                    f"inkabot:buffer:{pnid}:*",
+                    f"inkabot:rate:{pnid}:*",
+                    f"inkabot:muted:{pnid}:*",
+                ]:
+                    keys = await redis_client.keys(pattern)
+                    if keys:
+                        await redis_client.delete(*keys)
+        finally:
+            await redis_client.aclose()
+
+    return Response(message="Cliente demo reseteado correctamente")
