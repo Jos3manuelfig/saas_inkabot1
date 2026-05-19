@@ -2,6 +2,7 @@ import secrets
 import string
 from datetime import date
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from redis.asyncio import Redis
@@ -248,8 +249,12 @@ async def delete_tenant(tenant_id: str, db: DB, _: AdminUser):
     return Response(data=None, message="Cliente eliminado")
 
 
+class ResetDemoBody(BaseModel):
+    new_password: str | None = None  # None = generar contraseña aleatoria
+
+
 @router.delete("/{tenant_id}/reset-demo", response_model=Response)
-async def reset_demo_client(tenant_id: str, db: DB, _: AdminUser):
+async def reset_demo_client(tenant_id: str, body: ResetDemoBody, db: DB, _: AdminUser):
     """Resetea un cliente demo: borra entrenamiento, conversaciones y claves Redis."""
 
     # 1. Eliminar bloques de entrenamiento y resetear nombre del agente
@@ -271,7 +276,16 @@ async def reset_demo_client(tenant_id: str, db: DB, _: AdminUser):
     for conv in convs_result.scalars().all():
         await db.delete(conv)
 
-    # 3. Obtener phone_number_ids antes del commit para limpiar Redis
+    # 3. Actualizar contraseña del usuario client del tenant
+    user_result = await db.execute(
+        select(User).where(User.tenant_id == tenant_id, User.role == UserRole.client)
+    )
+    user = user_result.scalar_one_or_none()
+    raw_password = body.new_password.strip() if body.new_password and body.new_password.strip() else _generate_password()
+    if user:
+        user.hashed_password = hash_password(raw_password)
+
+    # 4. Obtener phone_number_ids antes del commit para limpiar Redis
     wa_result = await db.execute(
         select(WhatsappNumber).where(WhatsappNumber.tenant_id == tenant_id)
     )
@@ -280,7 +294,7 @@ async def reset_demo_client(tenant_id: str, db: DB, _: AdminUser):
 
     await db.commit()
 
-    # 4. Limpiar claves Redis del buffer y anti-spam para este tenant
+    # 5. Limpiar claves Redis del buffer y anti-spam para este tenant
     if phone_number_ids:
         redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
         try:
@@ -296,4 +310,7 @@ async def reset_demo_client(tenant_id: str, db: DB, _: AdminUser):
         finally:
             await redis_client.aclose()
 
-    return Response(message="Cliente demo reseteado correctamente")
+    return Response(
+        data={"new_password": raw_password, "email": user.email if user else None},
+        message="Cliente demo reseteado correctamente",
+    )

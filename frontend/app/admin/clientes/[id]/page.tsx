@@ -299,7 +299,8 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const token = session?.token ?? ''
   const [showResetModal, setShowResetModal] = useState(false)
   const [resetting, setResetting] = useState(false)
-  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [demoPassword, setDemoPassword] = useState('')
+  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string; password?: string } | null>(null)
 
   async function handleResetDemo() {
     setResetting(true)
@@ -307,11 +308,17 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     try {
       const res = await fetch(`${BASE_URL}/api/v1/tenants/${id}/reset-demo`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ new_password: demoPassword.trim() || null }),
       })
       const json = await res.json()
       if (res.ok) {
-        setResetMsg({ ok: true, text: json.message ?? 'Cliente demo reseteado correctamente' })
+        setResetMsg({
+          ok: true,
+          text: json.message ?? 'Cliente demo reseteado correctamente',
+          password: json.data?.new_password,
+        })
+        setDemoPassword('')
       } else {
         setResetMsg({ ok: false, text: json.detail ?? 'Error al resetear el cliente' })
       }
@@ -365,9 +372,21 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
               </p>
             </div>
           </div>
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="mt-4">
+            <label className="block text-xs font-medium text-[#6B7280] mb-1.5">
+              Nueva contraseña <span className="text-[#4B5563]">(opcional — vacío genera una aleatoria)</span>
+            </label>
+            <input
+              type="text"
+              value={demoPassword}
+              onChange={e => setDemoPassword(e.target.value)}
+              placeholder="Ej: demo1234"
+              className="w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] placeholder:text-[#4B5563] focus:outline-none focus:border-[#7B61FF] transition-colors font-mono"
+            />
+          </div>
+          <div className="flex gap-3 justify-end pt-4">
             <button
-              onClick={() => setShowResetModal(false)}
+              onClick={() => { setShowResetModal(false); setDemoPassword('') }}
               className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer"
             >
               Cancelar
@@ -407,9 +426,16 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             <RotateCcw size={14} /> Resetear cliente demo
           </button>
           {resetMsg && (
-            <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg ${resetMsg.ok ? 'bg-[#00E5A0]/10 text-[#00E5A0]' : 'bg-[#FF4D6A]/10 text-[#FF4D6A]'}`}>
-              {resetMsg.ok ? <CheckCircle size={12} /> : <X size={12} />}
-              {resetMsg.text}
+            <div className={`text-xs px-3 py-2 rounded-lg ${resetMsg.ok ? 'bg-[#00E5A0]/10 text-[#00E5A0]' : 'bg-[#FF4D6A]/10 text-[#FF4D6A]'}`}>
+              <div className="flex items-center gap-1.5">
+                {resetMsg.ok ? <CheckCircle size={12} /> : <X size={12} />}
+                {resetMsg.text}
+              </div>
+              {resetMsg.ok && resetMsg.password && (
+                <div className="mt-1.5 font-mono text-[#E8EAF0] bg-[#0D0F14] px-2 py-1 rounded-lg">
+                  Contraseña: <span className="text-[#00E5A0] font-semibold">{resetMsg.password}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
