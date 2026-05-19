@@ -13,6 +13,7 @@ from app.services.meta_whatsapp import MetaWhatsAppService
 from app.services.anthropic_service import AnthropicService
 from app.services.intent_classifier import IntentClassifierService, detect_handoff_keywords
 from app.services import message_buffer
+from app.services.admin_commands import is_admin_command, handle_admin_command
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,11 @@ async def receive_message(request: Request):
             # Feature 1: mensajes no textuales — responder y continuar
             if incoming.message_type in NON_TEXT_TYPES:
                 await meta.send_text_message(to=from_phone, text=NON_TEXT_REPLY)
+                continue
+
+            # Comandos de admin (José Manuel vía WhatsApp)
+            if is_admin_command(from_phone, incoming.text):
+                await handle_admin_command(db, incoming.text, wa_number, meta, from_phone)
                 continue
 
             # Feature 4: anti-spam via Redis
