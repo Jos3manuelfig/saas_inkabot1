@@ -40,8 +40,8 @@ export default function VendedoresPage() {
   async function fetchAgents() {
     try {
       const [agentsRes, statsRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers }),
-        fetch(`${BASE_URL}/api/v1/stats/${tenantId}`,  { headers }),
+        fetch(`${BASE_URL}/api/v1/agents/${tenantId}`, { headers, cache: 'no-store' }),
+        fetch(`${BASE_URL}/api/v1/stats/${tenantId}`,  { headers, cache: 'no-store' }),
       ])
       if (agentsRes.ok) { const j = await agentsRes.json(); setAgents(j.data ?? []) }
       else console.error('[vendedores] GET agents', agentsRes.status)

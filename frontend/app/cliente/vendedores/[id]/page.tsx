@@ -46,7 +46,10 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
 
   async function fetchAgent(preserveOnError = false) {
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}`, { headers })
+      const res = await fetch(`${BASE_URL}/api/v1/agents/${tenantId}/${id}`, {
+        headers,
+        cache: 'no-store',
+      })
       if (res.ok) { const json = await res.json(); setAgent(json.data); return }
       console.error('[agent] GET', res.status, await res.text().catch(() => ''))
     } catch (e) {
