@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     REDIS_URL: str = "redis://localhost:6379"
+    ADMIN_PHONE: str = "51924940724"
+    INKABOT_PHONE_NUMBER_ID: str = ""
     SPAM_MAX_MESSAGES: int = 10   # máx mensajes permitidos por ventana
     SPAM_WINDOW_SECONDS: int = 60  # ventana de tiempo en segundos
     SPAM_MUTE_SECONDS: int = 300   # duración del silencio en segundos

@@ -14,6 +14,7 @@ from app.services.anthropic_service import AnthropicService
 from app.services.intent_classifier import IntentClassifierService, detect_handoff_keywords
 from app.services import message_buffer
 from app.services.admin_commands import is_admin_command, handle_admin_command
+from app.services.system_admin_commands import is_system_admin_message, handle_system_admin
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,12 @@ async def receive_message(request: Request):
 
             # 2. Marcar como leído inmediatamente (doble check azul)
             await meta.mark_as_read(incoming.message_id)
+
+            # Comandos de administración del sistema INKABOT (máxima prioridad)
+            if is_system_admin_message(from_phone, phone_number_id):
+                if incoming.text.strip():
+                    await handle_system_admin(db, incoming.text, meta, from_phone)
+                continue
 
             # Feature 1: mensajes no textuales — responder y continuar
             if incoming.message_type in NON_TEXT_TYPES:
