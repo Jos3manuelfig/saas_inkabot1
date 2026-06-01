@@ -67,14 +67,26 @@ _NUEVO_STEPS = [
 # ── Detección ────────────────────────────────────────────────────────────────
 
 def is_system_admin_message(from_phone: str, phone_number_id: str) -> bool:
-    """True si el mensaje viene de José Manuel AL número INKABOT principal."""
-    if not settings.INKABOT_PHONE_NUMBER_ID:
+    """True SOLO si:
+    1. INKABOT_PHONE_NUMBER_ID está configurado (no vacío)
+    2. El mensaje fue recibido por el número INKABOT principal
+    3. El remitente es exactamente el número admin
+    Si alguna condición falla, retorna False y el mensaje sigue el flujo normal.
+    """
+    if not settings.INKABOT_PHONE_NUMBER_ID or not settings.ADMIN_PHONE:
         return False
-    admin = settings.ADMIN_PHONE.lstrip("+")
-    return (
-        from_phone.lstrip("+") == admin
-        and phone_number_id == settings.INKABOT_PHONE_NUMBER_ID
+
+    sender = from_phone.strip().lstrip("+")
+    admin = settings.ADMIN_PHONE.strip().lstrip("+")
+    receiver = phone_number_id.strip()
+    inkabot_pnid = settings.INKABOT_PHONE_NUMBER_ID.strip()
+
+    matched = (sender == admin) and (receiver == inkabot_pnid)
+    logger.debug(
+        "[sys-admin] check: sender=%s admin=%s receiver=%s inkabot_pnid=%s → %s",
+        sender, admin, receiver, inkabot_pnid, matched,
     )
+    return matched
 
 
 # ── Dispatcher principal ─────────────────────────────────────────────────────
