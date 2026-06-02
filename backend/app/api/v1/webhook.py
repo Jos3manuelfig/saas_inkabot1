@@ -102,10 +102,12 @@ async def receive_message(request: Request):
             await meta.mark_as_read(incoming.message_id)
 
             # Comandos de administración del sistema INKABOT (máxima prioridad)
+            # Si retorna False el mensaje no era un comando y sigue al flujo normal (Claude)
             if is_system_admin_message(from_phone, phone_number_id):
-                if incoming.text.strip():
-                    await handle_system_admin(db, incoming.text, meta, from_phone)
-                continue
+                handled = await handle_system_admin(db, incoming.text, meta, from_phone)
+                if handled:
+                    continue
+                # handled=False → no era comando ni flujo activo → continuar a Claude
 
             # Feature 1: mensajes no textuales — responder y continuar
             if incoming.message_type in NON_TEXT_TYPES:

@@ -96,23 +96,31 @@ async def handle_system_admin(
     text: str,
     meta: MetaWhatsAppService,
     from_phone: str,
-) -> None:
+) -> bool:
+    """Retorna True si el mensaje fue manejado como comando admin.
+    Retorna False si el mensaje debe seguir al flujo normal del chatbot (Claude)."""
     text = text.strip()
     if not text:
-        return
+        return True  # mensaje sin texto — ignorar silenciosamente
 
     redis = _get_redis()
     lower = text.lower()
+
+    # Verificar si hay un flujo activo antes de decidir
+    state = await _get_flow(redis, from_phone)
+
+    # Si no hay flujo activo y el mensaje no empieza con /, pasar a Claude
+    if not state and not text.startswith("/"):
+        return False
 
     # /cancelar — termina cualquier flujo
     if lower == "/cancelar":
         await redis.delete(_flow_key(from_phone))
         await meta.send_text_message(to=from_phone, text="❌ Flujo cancelado.")
-        return
+        return True
 
     # /listo — termina flujo de entrenamiento
     if lower == "/listo":
-        state = await _get_flow(redis, from_phone)
         if state and state.get("flow") == "entrenar":
             await redis.delete(_flow_key(from_phone))
             count = state.get("count", 0)
@@ -123,16 +131,15 @@ async def handle_system_admin(
             )
         else:
             await meta.send_text_message(to=from_phone, text="ℹ️ No hay un flujo de entrenamiento activo.")
-        return
+        return True
 
-    # Continuar flujo activo si existe
-    state = await _get_flow(redis, from_phone)
+    # Continuar flujo activo si existe (state ya fue cargado arriba)
     if state:
         if state["flow"] == "nuevo":
             await _continue_nuevo(db, redis, from_phone, text, state, meta)
         elif state["flow"] == "entrenar":
             await _continue_entrenar(db, redis, from_phone, text, state, meta)
-        return
+        return True
 
     # Parsear nuevo comando
     parts = text.split(None, 1)
@@ -167,6 +174,8 @@ async def handle_system_admin(
             to=from_phone,
             text=f"❓ Comando desconocido: *{cmd}*\nEscribe /ayuda para ver los comandos disponibles."
         )
+
+    return True
 
 
 # ── Redis helpers ─────────────────────────────────────────────────────────────
