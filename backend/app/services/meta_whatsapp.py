@@ -55,6 +55,26 @@ class MetaWhatsAppService:
             )
 
     @staticmethod
+    async def register_phone_number(phone_number_id: str, access_token: str, pin: str = "000000") -> dict:
+        """Registra el número en Meta WhatsApp Cloud API (necesario para activar el bot).
+        Retorna dict con keys: success (bool), error (str|None).
+        """
+        url = f"https://graph.facebook.com/v18.0/{phone_number_id}/register"
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                res = await client.post(
+                    url,
+                    headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+                    json={"messaging_product": "whatsapp", "pin": pin},
+                )
+            if res.status_code == 200:
+                return {"success": True, "error": None}
+            msg = res.json().get("error", {}).get("message", f"HTTP {res.status_code}")
+            return {"success": False, "error": msg}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
     def parse_webhook_payload(payload: dict) -> list[IncomingMessage]:
         """Extrae todos los mensajes del payload del webhook de Meta.
         Incluye mensajes multimedia para poder responderles apropiadamente."""

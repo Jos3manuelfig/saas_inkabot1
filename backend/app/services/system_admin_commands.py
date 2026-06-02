@@ -305,8 +305,22 @@ async def _create_tenant_from_flow(
 
         await db.commit()
 
+        # Registrar número en Meta (activa el bot)
+        register_result: dict = {"success": False, "error": "skipped"}
+        if meta_result["valid"]:
+            register_result = await MetaWhatsAppService.register_phone_number(
+                data["phone_number_id"], data["access_token"]
+            )
+
         meta_icon = "✅" if meta_result["valid"] else "⚠️"
-        meta_msg = "conectado" if meta_result["valid"] else f"error — {meta_result.get('error', '?')}"
+        meta_msg = "verificado" if meta_result["valid"] else f"error — {meta_result.get('error', '?')}"
+
+        if meta_result["valid"] and register_result["success"]:
+            register_line = "✅ *Registro Meta:* activado"
+        elif meta_result["valid"]:
+            register_line = f"⚠️ *Registro Meta:* requiere activación manual ({register_result.get('error', '?')})"
+        else:
+            register_line = "⚠️ *Registro Meta:* skipped (credenciales inválidas)"
 
         await meta.send_text_message(
             to=from_phone,
@@ -318,7 +332,8 @@ async def _create_tenant_from_flow(
                 f"*Plan:* {data['plan'].capitalize()}\n"
                 f"*Vence:* {expiry.strftime('%d/%m/%Y')}\n"
                 f"*WhatsApp:* {data['phone_number']}\n"
-                f"{meta_icon} *Meta:* {meta_msg}"
+                f"{meta_icon} *Meta:* {meta_msg}\n"
+                f"{register_line}"
             )
         )
 

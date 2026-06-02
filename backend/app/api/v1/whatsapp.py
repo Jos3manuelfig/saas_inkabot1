@@ -6,6 +6,7 @@ from app.api.deps import DB, CurrentUser, AdminUser
 from app.models.user import UserRole
 from app.models.whatsapp import WhatsappNumber, WhatsappConnectionStatus
 from app.schemas.common import Response
+from app.services.meta_whatsapp import MetaWhatsAppService
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -145,7 +146,26 @@ async def save_number(tenant_id: str, body: WhatsappNumberCreate, db: DB, _: Adm
     await db.commit()
     await db.refresh(number)
 
-    logger.info("[whatsapp] tenant=%s status=%s verified=%s", tenant_id, new_status, verification["valid"])
+    # Intentar registrar el número en Meta (necesario para activar el bot)
+    register_result: dict = {"success": False, "error": "skipped"}
+    if verification["valid"]:
+        register_result = await MetaWhatsAppService.register_phone_number(
+            body.phone_number_id, token_to_use
+        )
+        if register_result["success"]:
+            logger.info("[whatsapp] número registrado en Meta: %s", body.phone_number_id)
+        else:
+            logger.warning("[whatsapp] registro en Meta falló: %s", register_result["error"])
+
+    logger.info("[whatsapp] tenant=%s status=%s verified=%s registered=%s",
+                tenant_id, new_status, verification["valid"], register_result["success"])
+
+    if not verification["valid"]:
+        message = "Número guardado pero las credenciales no son válidas"
+    elif register_result["success"]:
+        message = "Número guardado, verificado y registrado en Meta"
+    else:
+        message = f"Número guardado pero requiere activación manual. Ejecuta /register manualmente. ({register_result['error']})"
 
     return Response(
         data={
@@ -156,6 +176,7 @@ async def save_number(tenant_id: str, body: WhatsappNumberCreate, db: DB, _: Adm
             "status": number.status,
             "bot_active": number.bot_active,
             "verification": verification,
+            "register": register_result,
         },
-        message="Número guardado y verificado" if verification["valid"] else "Número guardado pero las credenciales no son válidas",
+        message=message,
     )
