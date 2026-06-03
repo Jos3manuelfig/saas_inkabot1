@@ -321,6 +321,17 @@ async def _handle_incoming_message(
         if closing_text:
             await meta.send_text_message(to=from_phone, text=closing_text)
 
+        # 11. Verificar presupuesto de tokens y alertar al admin si está bajo
+        try:
+            from app.services.anthropic_monitor import check_and_alert
+            await check_and_alert(
+                phone_number_id=wa_number.phone_number_id,
+                access_token=wa_number.access_token,
+                admin_phone=settings.ADMIN_PHONE,
+            )
+        except Exception:
+            pass  # nunca interrumpir el flujo por el monitor
+
     except Exception as e:
         logger.error("Error procesando mensaje: %s", e, exc_info=True)
         await db.rollback()

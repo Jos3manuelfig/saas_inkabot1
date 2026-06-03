@@ -1,5 +1,8 @@
+import logging
 import anthropic
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Modelo rápido y económico para producción según CLAUDE.md
 PRODUCTION_MODEL = "claude-haiku-4-5-20251001"
@@ -57,7 +60,6 @@ class AnthropicService:
             agent_system_prompt, training_blocks or []
         )
 
-        # Tomar solo los últimos 20 mensajes para no exceder el contexto
         recent_history = history[-20:] if len(history) > 20 else history
         messages = [*recent_history, {"role": "user", "content": user_message}]
 
@@ -67,4 +69,12 @@ class AnthropicService:
             system=system,
             messages=messages,
         )
+
+        # Acumular tokens en Redis para el monitor de costos
+        try:
+            from app.services.anthropic_monitor import track_tokens
+            await track_tokens(response.usage.input_tokens, response.usage.output_tokens)
+        except Exception as e:
+            logger.warning("[anthropic] error tracking tokens: %s", e)
+
         return response.content[0].text

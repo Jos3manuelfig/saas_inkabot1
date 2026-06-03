@@ -48,6 +48,7 @@ HELP_TEXT = (
     "*/activar* [nombre o email] — Activar cliente\n"
     "*/desactivar* [nombre o email] — Desactivar cliente\n"
     "*/entrenar* [teléfono] — Entrenar agente de un cliente\n"
+    "*/tokens* — Ver consumo y costos de Anthropic\n"
     "*/admin* o */ayuda* — Mostrar esta ayuda\n\n"
     "_Escribe /cancelar para salir de cualquier flujo._"
 )
@@ -168,6 +169,11 @@ async def handle_system_admin(
 
     elif cmd == "/entrenar":
         await _start_entrenar(db, redis, from_phone, arg, meta)
+
+    elif cmd == "/tokens":
+        from app.services.anthropic_monitor import get_monthly_stats, format_tokens_message
+        stats = await get_monthly_stats()
+        await meta.send_text_message(to=from_phone, text=format_tokens_message(stats))
 
     else:
         await meta.send_text_message(
