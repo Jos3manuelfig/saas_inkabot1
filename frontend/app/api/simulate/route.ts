@@ -1,3 +1,6 @@
+// SECURITY: Este archivo es un Server-side API Route de Next.js.
+// La API key de Anthropic se lee de process.env (servidor) y NUNCA llega al browser.
+// NO usar NEXT_PUBLIC_ANTHROPIC_API_KEY — eso la expondría al cliente.
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 

@@ -38,6 +38,30 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
   const [userInput, setUserInput] = useState('')
   const [responding, setResponding] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const lastSentRef = useRef<number>(0)
+
+  const RATE_LIMIT_MS = 3000
+  const MAX_DAILY_MSGS = 10
+  const SIM_STORAGE_KEY = 'inkabot_sim'
+
+  function getSimUsage(): { count: number; date: string } {
+    try {
+      const raw = localStorage.getItem(SIM_STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const today = new Date().toISOString().slice(0, 10)
+        if (parsed.date === today) return parsed
+      }
+    } catch {}
+    return { count: 0, date: new Date().toISOString().slice(0, 10) }
+  }
+
+  function incrementSimUsage(): number {
+    const usage = getSimUsage()
+    usage.count += 1
+    try { localStorage.setItem(SIM_STORAGE_KEY, JSON.stringify(usage)) } catch {}
+    return usage.count
+  }
 
   const session = getSession()
   const tenantId = session?.user.clientId ?? '1'
@@ -141,6 +165,25 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
 
   async function sendMessage() {
     if (!userInput.trim() || responding) return
+
+    // Rate limit: 1 mensaje cada 3 segundos
+    const now = Date.now()
+    if (now - lastSentRef.current < RATE_LIMIT_MS) {
+      const secs = Math.ceil((RATE_LIMIT_MS - (now - lastSentRef.current)) / 1000)
+      setChatHistory(h => [...h, { role: 'assistant', content: `⏳ Espera ${secs} segundo(s) antes de enviar otro mensaje.` }])
+      return
+    }
+
+    // Límite diario de mensajes por sesión
+    const usage = getSimUsage()
+    if (usage.count >= MAX_DAILY_MSGS) {
+      setChatHistory(h => [...h, { role: 'assistant', content: `🚫 Alcanzaste el límite de ${MAX_DAILY_MSGS} mensajes de prueba por día. Vuelve mañana o usa el bot real desde WhatsApp.` }])
+      return
+    }
+
+    lastSentRef.current = now
+    incrementSimUsage()
+
     const message = userInput.trim(); setUserInput('')
     const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: message }]
     setChatHistory(newHistory); setResponding(true)
@@ -287,8 +330,13 @@ export default function VendedorDetailPage({ params }: { params: Promise<{ id: s
       {tab === 'simulate' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloques de entrenamiento activos. Esta conversación no se guarda.</p>
-            <button onClick={() => setChatHistory([])} className="text-xs text-[#6B7280] hover:text-[#E8EAF0] transition-colors cursor-pointer">Limpiar chat ✕</button>
+            <p className="text-xs text-[#6B7280]">{agent.training_blocks.length} bloques activos. Esta conversación no se guarda.</p>
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-medium ${getSimUsage().count >= MAX_DAILY_MSGS ? 'text-[#FF4D6A]' : 'text-[#6B7280]'}`}>
+                {MAX_DAILY_MSGS - getSimUsage().count}/{MAX_DAILY_MSGS} mensajes hoy
+              </span>
+              <button onClick={() => setChatHistory([])} className="text-xs text-[#6B7280] hover:text-[#E8EAF0] transition-colors cursor-pointer">Limpiar chat ✕</button>
+            </div>
           </div>
           <div className="rounded-2xl overflow-hidden border border-[#2A2F42] shadow-xl">
             <div className="flex items-center gap-3 px-4 py-3 bg-[#075E54]">
