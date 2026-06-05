@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
+from app.models.tenant import Tenant
 from app.models.whatsapp import WhatsappNumber
 from app.models.conversation import Conversation, Message, MessageRole, ConversationStatus
 from app.models.agent import VendedorAgent
@@ -165,6 +166,14 @@ async def _handle_incoming_message(
             return
 
         meta = MetaWhatsAppService(phone_number_id, wa_number.access_token)
+
+        # Verificar que el tenant esté activo
+        tenant_result = await db.execute(
+            select(Tenant).where(Tenant.id == wa_number.tenant_id)
+        )
+        tenant = tenant_result.scalar_one_or_none()
+        if not tenant or not tenant.is_active:
+            return  # No responder si el tenant está desactivado
 
         # 2. Buscar o crear conversación activa
         conv_result = await db.execute(
