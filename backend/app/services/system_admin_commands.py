@@ -64,6 +64,20 @@ _NUEVO_STEPS = [
     ("phone_number",    "7️⃣ ¿Número de teléfono del cliente? (ej: +51987654321)"),
 ]
 
+_NUEVO_INTRO = (
+    "📋 *Nuevo cliente — campos requeridos:*\n\n"
+    "1️⃣ Nombre del negocio\n"
+    "2️⃣ Email del cliente\n"
+    "3️⃣ Plan (emprendedor / profesional)\n"
+    "4️⃣ Fecha de vencimiento (DD/MM/AAAA)\n"
+    "5️⃣ Phone Number ID (de Meta Developer)\n"
+    "6️⃣ Access Token (token permanente de Meta)\n"
+    "7️⃣ Número de teléfono (+51XXXXXXXXX)\n\n"
+    "_Escribe /cancelar en cualquier momento para salir._\n\n"
+    "Empecemos 👇\n"
+    "¿Cuál es el nombre del negocio?"
+)
+
 
 # ── Detección ────────────────────────────────────────────────────────────────
 
@@ -203,11 +217,7 @@ async def _set_flow(redis: Redis, phone: str, state: dict) -> None:
 
 async def _start_nuevo(redis: Redis, from_phone: str, meta: MetaWhatsAppService) -> None:
     await _set_flow(redis, from_phone, {"flow": "nuevo", "step": 0, "data": {}})
-    _, q = _NUEVO_STEPS[0]
-    await meta.send_text_message(
-        to=from_phone,
-        text=f"🆕 *Nuevo cliente — paso 1 de {len(_NUEVO_STEPS)}*\n\n{q}\n\n_/cancelar para salir_"
-    )
+    await meta.send_text_message(to=from_phone, text=_NUEVO_INTRO)
 
 
 async def _continue_nuevo(
@@ -215,6 +225,25 @@ async def _continue_nuevo(
     from_phone: str, text: str, state: dict,
     meta: MetaWhatsAppService,
 ) -> None:
+    # Paso de confirmación (todos los datos ya recopilados)
+    if state.get("confirming"):
+        lower = text.strip().lower()
+        if lower in ("si", "sí"):
+            await redis.delete(_flow_key(from_phone))
+            await _create_tenant_from_flow(db, state["data"], from_phone, meta)
+        elif lower in ("no"):
+            await redis.delete(_flow_key(from_phone))
+            await meta.send_text_message(
+                to=from_phone,
+                text="❌ Creación cancelada. Escribe /nuevo para empezar de nuevo."
+            )
+        else:
+            await meta.send_text_message(
+                to=from_phone,
+                text="Por favor responde *SI* para confirmar o *NO* para cancelar."
+            )
+        return
+
     step = state["step"]
     field, _ = _NUEVO_STEPS[step]
 
@@ -248,8 +277,22 @@ async def _continue_nuevo(
             text=f"*Paso {state['step'] + 1} de {len(_NUEVO_STEPS)}*\n\n{next_q}"
         )
     else:
-        await redis.delete(_flow_key(from_phone))
-        await _create_tenant_from_flow(db, state["data"], from_phone, meta)
+        # Todos los campos recopilados — mostrar resumen y pedir confirmación
+        d = state["data"]
+        expiry_fmt = date.fromisoformat(d["expiry"]).strftime("%d/%m/%Y") if d.get("expiry") else d.get("expiry", "—")
+        summary = (
+            "✅ *Resumen del nuevo cliente:*\n\n"
+            f"🏪 *Negocio:* {d.get('name', '—')}\n"
+            f"📧 *Email:* {d.get('email', '—')}\n"
+            f"📦 *Plan:* {d.get('plan', '—').capitalize()}\n"
+            f"📅 *Vencimiento:* {expiry_fmt}\n"
+            f"📱 *Teléfono:* {d.get('phone_number', '—')}\n"
+            f"🔑 *Phone Number ID:* {d.get('phone_number_id', '—')}\n\n"
+            "¿Confirmas la creación? Responde *SI* para confirmar o *NO* para cancelar."
+        )
+        state["confirming"] = True
+        await _set_flow(redis, from_phone, state)
+        await meta.send_text_message(to=from_phone, text=summary)
 
 
 async def _create_tenant_from_flow(
