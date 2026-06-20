@@ -140,8 +140,7 @@ async def get_messages(tenant_id: str, conversation_id: str, db: DB, current_use
     if not conv:
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
 
-    # Últimos 20 mensajes ordenados cronológicamente
-    msgs_sorted = sorted(conv.messages, key=lambda m: m.created_at)[-20:]
+    msgs_sorted = sorted(conv.messages, key=lambda m: m.created_at)
     messages = [MessageOut.model_validate(m).model_dump() for m in msgs_sorted]
 
     return Response(data={
