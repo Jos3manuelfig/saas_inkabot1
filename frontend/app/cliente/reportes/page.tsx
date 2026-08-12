@@ -23,7 +23,7 @@ interface ReportsData {
 type IntentLevel = 'curiosidad' | 'interesado' | 'muy_interesado' | 'sale_closed' | 'sale_lost' | 'human_handoff'
 
 const INTENT_CFG: Record<IntentLevel, { label: string; color: string; bg: string; border: string; heat: number }> = {
-  curiosidad:    { label: 'Curiosidad',      color: 'text-[#6B7280]', bg: 'bg-[#6B7280]/10',  border: 'border-[#6B7280]/25',  heat: 1 },
+  curiosidad:    { label: 'Curiosidad',      color: 'text-[#8A8A8A]', bg: 'bg-[#8A8A8A]/10',  border: 'border-[#8A8A8A]/25',  heat: 1 },
   interesado:    { label: 'Interesado',      color: 'text-[#3B82F6]', bg: 'bg-[#3B82F6]/10',  border: 'border-[#3B82F6]/25',  heat: 2 },
   muy_interesado:{ label: 'Muy interesado',  color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10',  border: 'border-[#F59E0B]/25',  heat: 3 },
   sale_closed:   { label: 'Venta cerrada',   color: 'text-[#00E5A0]', bg: 'bg-[#00E5A0]/10',  border: 'border-[#00E5A0]/25',  heat: 5 },
@@ -46,11 +46,11 @@ function getIntentLevel(conv: ConvRow): IntentLevel {
 
 function HeatBar({ level }: { level: IntentLevel }) {
   const heat = INTENT_CFG[level].heat
-  const colors = ['bg-[#2A2F42]','bg-[#6B7280]','bg-[#3B82F6]','bg-[#F59E0B]','bg-[#F97316]','bg-[#00E5A0]']
+  const colors = ['bg-[#2A2A2A]','bg-[#8A8A8A]','bg-[#3B82F6]','bg-[#F59E0B]','bg-[#F97316]','bg-[#00E5A0]']
   return (
     <div className="flex gap-0.5 items-end h-4">
       {[1,2,3,4,5].map(i => (
-        <div key={i} className={`w-1.5 rounded-sm ${i <= heat ? colors[heat] : 'bg-[#2A2F42]'}`}
+        <div key={i} className={`w-1.5 rounded-sm ${i <= heat ? colors[heat] : 'bg-[#2A2A2A]'}`}
           style={{ height: `${i * 3 + 4}px` }} />
       ))}
     </div>
@@ -119,27 +119,27 @@ export default function ReportesPage() {
   return (
     <div className="space-y-5 animate-fadeIn">
       <div>
-        <h1 className="text-2xl font-bold text-[#E8EAF0]">Reportes</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">Termómetro de intención de compra</p>
+        <h1 className="text-2xl font-bold text-[#F2F2F2]">Reportes</h1>
+        <p className="text-sm text-[#8A8A8A] mt-0.5">Termómetro de intención de compra</p>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 items-center bg-[#141720] border border-[#2A2F42] rounded-2xl px-4 py-3">
-        <Calendar size={15} className="text-[#6B7280]" />
+      <div className="flex flex-wrap gap-3 items-center bg-[#141414] border border-[#2A2A2A] rounded-2xl px-4 py-3">
+        <Calendar size={15} className="text-[#8A8A8A]" />
         <div className="flex items-center gap-2">
           <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]" />
-          <span className="text-[#6B7280] text-xs">→</span>
+            className="px-3 py-2 text-xs rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A]" />
+          <span className="text-[#8A8A8A] text-xs">→</span>
           <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]" />
+            className="px-3 py-2 text-xs rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A]" />
         </div>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="px-3 py-2 text-xs rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]">
+          className="px-3 py-2 text-xs rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A]">
           {FILTER_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         {(startDate || endDate || filterStatus) && (
           <button onClick={() => { setStartDate(''); setEndDate(''); setFilterStatus('') }}
-            className="text-xs text-[#6B7280] hover:text-[#E8EAF0] transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-[#1C2030]">
+            className="text-xs text-[#8A8A8A] hover:text-[#F2F2F2] transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-[#1C1C1C]">
             Limpiar ✕
           </button>
         )}
@@ -155,17 +155,17 @@ export default function ReportesPage() {
 
       {/* Barra de distribución */}
       {total > 0 && (
-        <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Distribución de conversaciones</h3>
+        <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5">
+          <h3 className="text-sm font-semibold text-[#F2F2F2] mb-4">Distribución de conversaciones</h3>
           <div className="flex h-3 rounded-full overflow-hidden gap-px">
             {closed  > 0 && <div className="bg-[#00E5A0]" style={{ width: `${(closed/total)*100}%`  }} title="Venta cerrada" />}
             {handoff > 0 && <div className="bg-[#F59E0B]" style={{ width: `${(handoff/total)*100}%` }} title="Derivado" />}
             {lost    > 0 && <div className="bg-[#FF4D6A]" style={{ width: `${(lost/total)*100}%`    }} title="Venta perdida" />}
-            {(data?.active ?? 0) > 0 && <div className="bg-[#7B61FF] flex-1" title="En curso" />}
+            {(data?.active ?? 0) > 0 && <div className="bg-[#FF7A1A] flex-1" title="En curso" />}
           </div>
           <div className="flex gap-4 mt-3">
-            {[['bg-[#00E5A0]','Venta cerrada'],['bg-[#F59E0B]','Derivados'],['bg-[#FF4D6A]','Venta perdida'],['bg-[#7B61FF]','En curso']].map(([c,l]) => (
-              <span key={l} className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+            {[['bg-[#00E5A0]','Venta cerrada'],['bg-[#F59E0B]','Derivados'],['bg-[#FF4D6A]','Venta perdida'],['bg-[#FF7A1A]','En curso']].map(([c,l]) => (
+              <span key={l} className="flex items-center gap-1.5 text-xs text-[#8A8A8A]">
                 <span className={`w-2 h-2 rounded-sm ${c}`} />{l}
               </span>
             ))}
@@ -174,40 +174,40 @@ export default function ReportesPage() {
       )}
 
       {/* Tabla termómetro */}
-      <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#2A2F42]">
-          <h3 className="text-sm font-semibold text-[#E8EAF0]">Historial de conversaciones — Intención de compra</h3>
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#2A2A2A]">
+          <h3 className="text-sm font-semibold text-[#F2F2F2]">Historial de conversaciones — Intención de compra</h3>
         </div>
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-[#7B61FF]" /></div>
+          <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-[#FF7A1A]" /></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#2A2F42] bg-[#0D0F14]">
+                <tr className="border-b border-[#2A2A2A] bg-[#0A0A0A]">
                   {['Cliente', 'Intención', 'Calor', 'Resumen', 'Mensajes', 'Fecha'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">{h}</th>
+                    <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#8A8A8A] uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2A2F42]">
+              <tbody className="divide-y divide-[#2A2A2A]">
                 {convs.length === 0 ? (
-                  <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-[#6B7280]">No hay conversaciones en este período</td></tr>
+                  <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-[#8A8A8A]">No hay conversaciones en este período</td></tr>
                 ) : convs.map(c => {
                   const level = getIntentLevel(c)
                   return (
-                    <tr key={c.id} className="hover:bg-[#1C2030] transition-colors">
-                      <td className="px-5 py-3.5 font-mono text-sm text-[#E8EAF0]">{c.user_phone}</td>
+                    <tr key={c.id} className="hover:bg-[#1C1C1C] transition-colors">
+                      <td className="px-5 py-3.5 font-mono text-sm text-[#F2F2F2]">{c.user_phone}</td>
                       <td className="px-5 py-3.5"><IntentBadge level={level} /></td>
                       <td className="px-5 py-3.5"><HeatBar level={level} /></td>
                       <td className="px-5 py-3.5 max-w-xs">
-                        <span className="text-xs text-[#6B7280] line-clamp-2">{c.intent_summary ?? '—'}</span>
+                        <span className="text-xs text-[#8A8A8A] line-clamp-2">{c.intent_summary ?? '—'}</span>
                       </td>
                       <td className="px-5 py-3.5 text-center">
-                        <span className="text-sm font-semibold text-[#E8EAF0]">{c.message_count}</span>
+                        <span className="text-sm font-semibold text-[#F2F2F2]">{c.message_count}</span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-xs text-[#6B7280]">{fmtDt(c.last_message_at ?? c.started_at)}</span>
+                        <span className="text-xs text-[#8A8A8A]">{fmtDt(c.last_message_at ?? c.started_at)}</span>
                       </td>
                     </tr>
                   )
@@ -216,8 +216,8 @@ export default function ReportesPage() {
             </table>
           </div>
         )}
-        <div className="px-5 py-3 border-t border-[#2A2F42] bg-[#0D0F14]">
-          <p className="text-xs text-[#6B7280]">{convs.length} conversaciones</p>
+        <div className="px-5 py-3 border-t border-[#2A2A2A] bg-[#0A0A0A]">
+          <p className="text-xs text-[#8A8A8A]">{convs.length} conversaciones</p>
         </div>
       </div>
     </div>

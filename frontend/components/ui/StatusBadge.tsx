@@ -25,9 +25,9 @@ export function StatusBadge({ status, label }: { status: StatusType; label?: str
 export function PlanBadge({ plan }: { plan: string }) {
   const colors: Record<string, string> = {
     'Emprendedor': 'bg-slate-500/15 text-slate-300 border-slate-500/25',
-    'Profesional': 'bg-[#7B61FF]/15 text-[#7B61FF] border-[#7B61FF]/25',
+    'Profesional': 'bg-[#FF7A1A]/15 text-[#FF7A1A] border-[#FF7A1A]/25',
     'Básico':      'bg-slate-500/15 text-slate-300 border-slate-500/25',
-    'Pro':         'bg-[#7B61FF]/15 text-[#7B61FF] border-[#7B61FF]/25',
+    'Pro':         'bg-[#FF7A1A]/15 text-[#FF7A1A] border-[#FF7A1A]/25',
     'Enterprise':  'bg-[#00E5A0]/15 text-[#00E5A0] border-[#00E5A0]/25',
   }
   return (

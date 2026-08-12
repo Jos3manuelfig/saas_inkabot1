@@ -53,11 +53,11 @@ export default function PagosPage() {
     <div className="space-y-5 animate-fadeIn">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#E8EAF0]">Pagos</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">Historial y gestión de cobros</p>
+          <h1 className="text-2xl font-bold text-[#F2F2F2]">Pagos</h1>
+          <p className="text-sm text-[#8A8A8A] mt-0.5">Historial y gestión de cobros</p>
         </div>
         <button onClick={() => setAddOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#7B61FF] hover:bg-[#5B41DF] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-[0_0_20px_rgba(123,97,255,0.3)]">
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#FF7A1A] hover:bg-[#E0650A] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-[0_0_20px_rgba(255,122,26,0.3)]">
           <Plus size={15} /> Registrar pago
         </button>
       </div>
@@ -70,7 +70,7 @@ export default function PagosPage() {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 items-center">
-        <Filter size={14} className="text-[#6B7280]" />
+        <Filter size={14} className="text-[#8A8A8A]" />
         <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}
           className="px-3 py-2.5 text-sm rounded-xl" />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2.5 text-sm rounded-xl">
@@ -79,40 +79,40 @@ export default function PagosPage() {
           <option value="pending">Pendientes</option>
         </select>
         {(filterMonth || filterStatus) && (
-          <button onClick={() => { setFilterMonth(''); setFilterStatus('') }} className="text-xs text-[#6B7280] hover:text-[#E8EAF0] cursor-pointer transition-colors">
+          <button onClick={() => { setFilterMonth(''); setFilterStatus('') }} className="text-xs text-[#8A8A8A] hover:text-[#F2F2F2] cursor-pointer transition-colors">
             Limpiar filtros ✕
           </button>
         )}
       </div>
 
       {/* Tabla */}
-      <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#2A2F42] bg-[#0D0F14]">
+              <tr className="border-b border-[#2A2A2A] bg-[#0A0A0A]">
                 {['Cliente', 'Monto', 'Plan', 'Método', 'Fecha', 'Estado'].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#8A8A8A] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2A2F42]">
+            <tbody className="divide-y divide-[#2A2A2A]">
               {filtered.length === 0 ? (
-                <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#6B7280]">No hay pagos registrados</td></tr>
+                <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#8A8A8A]">No hay pagos registrados</td></tr>
               ) : filtered.map(p => (
-                <tr key={p.id} className="hover:bg-[#1C2030] transition-colors">
+                <tr key={p.id} className="hover:bg-[#1C1C1C] transition-colors">
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-[#E8EAF0]">{p.clientName}</p>
+                    <p className="font-semibold text-[#F2F2F2]">{p.clientName}</p>
                   </td>
                   <td className="px-5 py-4">
                     <span className="text-base font-bold text-[#00E5A0]">S/ {p.amount.toLocaleString()}</span>
                   </td>
                   <td className="px-5 py-4"><PlanBadge plan={p.plan} /></td>
                   <td className="px-5 py-4">
-                    <span className="text-sm text-[#E8EAF0] font-medium">{p.method}</span>
+                    <span className="text-sm text-[#F2F2F2] font-medium">{p.method}</span>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="text-sm text-[#6B7280]">{formatDate(p.date)}</span>
+                    <span className="text-sm text-[#8A8A8A]">{formatDate(p.date)}</span>
                   </td>
                   <td className="px-5 py-4"><StatusBadge status={p.status} /></td>
                 </tr>
@@ -120,8 +120,8 @@ export default function PagosPage() {
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-3 border-t border-[#2A2F42] bg-[#0D0F14]">
-          <p className="text-xs text-[#6B7280]">Mostrando {filtered.length} de {payments.length} pagos</p>
+        <div className="px-5 py-3 border-t border-[#2A2A2A] bg-[#0A0A0A]">
+          <p className="text-xs text-[#8A8A8A]">Mostrando {filtered.length} de {payments.length} pagos</p>
         </div>
       </div>
 
@@ -129,7 +129,7 @@ export default function PagosPage() {
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Registrar pago">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Cliente *</label>
+            <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Cliente *</label>
             <select value={form.clientId} onChange={set('clientId')} className="w-full px-3 py-2.5 text-sm rounded-xl">
               <option value="">Seleccionar cliente...</option>
               {mockClients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -137,11 +137,11 @@ export default function PagosPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Monto (S/) *</label>
+              <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Monto (S/) *</label>
               <input type="number" value={form.amount} onChange={set('amount')} placeholder="150" className="w-full px-3 py-2.5 text-sm rounded-xl" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Método</label>
+              <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Método</label>
               <select value={form.method} onChange={set('method')} className="w-full px-3 py-2.5 text-sm rounded-xl">
                 {METHODS.map(m => <option key={m}>{m}</option>)}
               </select>
@@ -149,13 +149,13 @@ export default function PagosPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Plan</label>
+              <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Plan</label>
               <select value={form.plan} onChange={set('plan')} className="w-full px-3 py-2.5 text-sm rounded-xl">
                 {PLANS.map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Estado</label>
+              <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Estado</label>
               <select value={form.status} onChange={set('status')} className="w-full px-3 py-2.5 text-sm rounded-xl">
                 <option value="paid">Pagado</option>
                 <option value="pending">Pendiente</option>
@@ -163,13 +163,13 @@ export default function PagosPage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Fecha</label>
+            <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Fecha</label>
             <input type="date" value={form.date} onChange={set('date')} className="w-full px-3 py-2.5 text-sm rounded-xl" />
           </div>
         </div>
-        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2F42]">
-          <button onClick={() => setAddOpen(false)} className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">Cancelar</button>
-          <button onClick={handleAdd} disabled={!form.clientId || !form.amount} className="px-5 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">Registrar</button>
+        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2A2A]">
+          <button onClick={() => setAddOpen(false)} className="px-4 py-2 text-sm rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">Cancelar</button>
+          <button onClick={handleAdd} disabled={!form.clientId || !form.amount} className="px-5 py-2 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] disabled:opacity-40 transition-colors cursor-pointer">Registrar</button>
         </div>
       </Modal>
     </div>

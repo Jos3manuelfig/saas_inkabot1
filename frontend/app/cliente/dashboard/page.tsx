@@ -28,7 +28,7 @@ interface Stats {
 }
 
 const STATUS_CFG: Record<ConvStatus, { label: string; dot: string; text: string }> = {
-  active:        { label: 'En curso',         dot: 'bg-[#7B61FF]', text: 'text-[#7B61FF]' },
+  active:        { label: 'En curso',         dot: 'bg-[#FF7A1A]', text: 'text-[#FF7A1A]' },
   sale_closed:   { label: 'Venta cerrada',    dot: 'bg-[#00E5A0]', text: 'text-[#00E5A0]' },
   sale_lost:     { label: 'Venta perdida',    dot: 'bg-[#FF4D6A]', text: 'text-[#FF4D6A]' },
   human_handoff: { label: 'Derivado a humano',dot: 'bg-[#F59E0B]', text: 'text-[#F59E0B]' },
@@ -71,7 +71,7 @@ export default function ClienteDashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <Loader2 size={24} className="animate-spin text-[#7B61FF]" />
+      <Loader2 size={24} className="animate-spin text-[#FF7A1A]" />
     </div>
   )
   if (error || !stats) return (
@@ -84,8 +84,8 @@ export default function ClienteDashboard() {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h1 className="text-2xl font-bold text-[#E8EAF0]">Mi Dashboard</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">{session?.user.name}</p>
+        <h1 className="text-2xl font-bold text-[#F2F2F2]">Mi Dashboard</h1>
+        <p className="text-sm text-[#8A8A8A] mt-0.5">{session?.user.name}</p>
       </div>
 
       {(isExpiring || isExpired) && (
@@ -126,34 +126,34 @@ export default function ClienteDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Gráfica */}
-        <div className="lg:col-span-2 bg-[#141720] border border-[#2A2F42] rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Mensajes por día (últimos 7 días)</h3>
+        <div className="lg:col-span-2 bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5">
+          <h3 className="text-sm font-semibold text-[#F2F2F2] mb-4">Mensajes por día (últimos 7 días)</h3>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={stats.messages_last_7_days} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="cgV" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7B61FF" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#7B61FF" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#FF7A1A" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#FF7A1A" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A2F42" />
-              <XAxis dataKey="date" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#1C2030', border: '1px solid #2A2F42', borderRadius: 10, color: '#E8EAF0', fontSize: 12 }} />
-              <Area type="monotone" dataKey="sent"     stroke="#7B61FF" strokeWidth={2} fill="url(#cgV)" name="Bot" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+              <XAxis dataKey="date" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ background: '#1C1C1C', border: '1px solid #2A2A2A', borderRadius: 10, color: '#F2F2F2', fontSize: 12 }} />
+              <Area type="monotone" dataKey="sent"     stroke="#FF7A1A" strokeWidth={2} fill="url(#cgV)" name="Bot" />
               <Area type="monotone" dataKey="received" stroke="#00E5A0" strokeWidth={2} fill="none"       name="Clientes" />
             </AreaChart>
           </ResponsiveContainer>
           <div className="flex gap-4 mt-2">
-            <span className="flex items-center gap-1.5 text-xs text-[#6B7280]"><span className="w-2.5 h-0.5 bg-[#7B61FF] rounded" />Bot</span>
-            <span className="flex items-center gap-1.5 text-xs text-[#6B7280]"><span className="w-2.5 h-0.5 bg-[#00E5A0] rounded" />Clientes</span>
+            <span className="flex items-center gap-1.5 text-xs text-[#8A8A8A]"><span className="w-2.5 h-0.5 bg-[#FF7A1A] rounded" />Bot</span>
+            <span className="flex items-center gap-1.5 text-xs text-[#8A8A8A]"><span className="w-2.5 h-0.5 bg-[#00E5A0] rounded" />Clientes</span>
           </div>
         </div>
 
         {/* Bot + Plan */}
         <div className="space-y-4">
-          <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Estado del bot</h3>
+          <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5">
+            <h3 className="text-sm font-semibold text-[#F2F2F2] mb-4">Estado del bot</h3>
             <div className="flex flex-col items-center py-3 gap-3">
               <div className={`relative flex h-16 w-16 items-center justify-center rounded-full ${stats.bot_active ? 'bg-[#00E5A0]/10' : 'bg-[#FF4D6A]/10'}`}>
                 {stats.bot_active && <span className="absolute inset-0 rounded-full animate-ping bg-[#00E5A0]/15" />}
@@ -165,17 +165,17 @@ export default function ClienteDashboard() {
             </div>
           </div>
 
-          <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-[#E8EAF0] mb-3">Mi plan</h3>
+          <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5">
+            <h3 className="text-sm font-semibold text-[#F2F2F2] mb-3">Mi plan</h3>
             <div className="space-y-3">
               {[
                 { label: 'Plan',          val: stats.plan_name ?? '—' },
                 { label: 'Vencimiento',   val: fmtDate(stats.end_date) },
                 { label: 'Días restantes',val: `${stats.days_remaining}d` },
               ].map(({ label, val }) => (
-                <div key={label} className="flex items-center justify-between border-b border-[#2A2F42] pb-2 last:border-0 last:pb-0">
-                  <span className="text-xs text-[#6B7280]">{label}</span>
-                  <span className={`text-xs font-semibold ${label === 'Días restantes' && isExpiring ? 'text-[#F59E0B]' : 'text-[#E8EAF0]'}`}>{val}</span>
+                <div key={label} className="flex items-center justify-between border-b border-[#2A2A2A] pb-2 last:border-0 last:pb-0">
+                  <span className="text-xs text-[#8A8A8A]">{label}</span>
+                  <span className={`text-xs font-semibold ${label === 'Días restantes' && isExpiring ? 'text-[#F59E0B]' : 'text-[#F2F2F2]'}`}>{val}</span>
                 </div>
               ))}
             </div>
@@ -184,33 +184,33 @@ export default function ClienteDashboard() {
       </div>
 
       {/* Últimas conversaciones */}
-      <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#2A2F42]">
-          <h3 className="text-sm font-semibold text-[#E8EAF0]">Últimas conversaciones</h3>
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#2A2A2A]">
+          <h3 className="text-sm font-semibold text-[#F2F2F2]">Últimas conversaciones</h3>
         </div>
         {stats.last_conversations.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-[#6B7280]">Sin conversaciones aún</p>
+          <p className="px-5 py-8 text-center text-sm text-[#8A8A8A]">Sin conversaciones aún</p>
         ) : (
-          <div className="divide-y divide-[#2A2F42]">
+          <div className="divide-y divide-[#2A2A2A]">
             {stats.last_conversations.map(c => {
               const cfg = STATUS_CFG[c.status as ConvStatus] ?? STATUS_CFG.active
               return (
-                <div key={c.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-[#1C2030] transition-colors">
+                <div key={c.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-[#1C1C1C] transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0D0F14] shrink-0">
-                      <Phone size={13} className="text-[#6B7280]" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A0A0A] shrink-0">
+                      <Phone size={13} className="text-[#8A8A8A]" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#E8EAF0]">{c.user_phone}</p>
-                      <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-1">{c.intent_summary ?? 'Sin intención detectada'}</p>
+                      <p className="text-sm font-medium text-[#F2F2F2]">{c.user_phone}</p>
+                      <p className="text-xs text-[#8A8A8A] mt-0.5 line-clamp-1">{c.intent_summary ?? 'Sin intención detectada'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={`flex items-center gap-1.5 text-xs font-medium ${cfg.text}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />{cfg.label}
                     </span>
-                    <span className="text-xs text-[#6B7280]">{fmtTime(c.last_message_at)}</span>
-                    <span className="text-xs text-[#6B7280]">{c.message_count} msg</span>
+                    <span className="text-xs text-[#8A8A8A]">{fmtTime(c.last_message_at)}</span>
+                    <span className="text-xs text-[#8A8A8A]">{c.message_count} msg</span>
                   </div>
                 </div>
               )

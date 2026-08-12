@@ -54,7 +54,7 @@ function tenantToClient(t: TenantOut): Client {
   }
 }
 
-const inp = "w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]"
+const inp = "w-full px-3 py-2.5 text-sm rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A]"
 
 function ClientForm({ value, onChange }: { value: typeof emptyForm; onChange: (v: typeof emptyForm) => void }) {
   const set = (k: keyof typeof emptyForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -62,26 +62,26 @@ function ClientForm({ value, onChange }: { value: typeof emptyForm; onChange: (v
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Nombre del negocio *</label>
+        <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Nombre del negocio *</label>
         <input value={value.name} onChange={set('name')} placeholder="Restaurante El Inka" className={inp} />
       </div>
       <div>
-        <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Email *</label>
+        <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Email *</label>
         <input type="email" value={value.email} onChange={set('email')} placeholder="contacto@negocio.pe" className={inp} />
       </div>
       <div>
-        <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Teléfono</label>
+        <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Teléfono</label>
         <input value={value.phone} onChange={set('phone')} placeholder="+51987654321" className={inp} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Plan</label>
+          <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Plan</label>
           <select value={value.plan} onChange={set('plan')} className={inp}>
             {PLANS.map(p => <option key={p}>{p}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Estado</label>
+          <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Estado</label>
           <select value={value.status} onChange={set('status')} className={inp}>
             <option value="active">Activo</option>
             <option value="inactive">Inactivo</option>
@@ -89,7 +89,7 @@ function ClientForm({ value, onChange }: { value: typeof emptyForm; onChange: (v
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Fecha de vencimiento</label>
+        <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">Fecha de vencimiento</label>
         <input type="date" value={value.expiryDate} onChange={set('expiryDate')} className={inp} />
       </div>
     </div>
@@ -100,7 +100,7 @@ function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-      className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#00E5A0] hover:bg-[#00E5A0]/10 transition-colors cursor-pointer">
+      className="p-1.5 rounded-lg text-[#8A8A8A] hover:text-[#00E5A0] hover:bg-[#00E5A0]/10 transition-colors cursor-pointer">
       {copied ? <Check size={14} className="text-[#00E5A0]" /> : <Copy size={14} />}
     </button>
   )
@@ -110,23 +110,23 @@ function CredentialsModal({ creds, onClose }: { creds: CreatedCredentials; onClo
   return (
     <Modal open onClose={onClose} title="Cliente creado — Credenciales">
       <div className="space-y-4">
-        <p className="text-sm text-[#6B7280]">Comparte estas credenciales con tu cliente.</p>
-        <div className="bg-[#0D0F14] border border-[#2A2F42] rounded-xl p-4 space-y-3">
+        <p className="text-sm text-[#8A8A8A]">Comparte estas credenciales con tu cliente.</p>
+        <div className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-[#6B7280] mb-0.5">Email</p><p className="text-sm font-mono text-[#E8EAF0]">{creds.email}</p></div>
+            <div><p className="text-xs text-[#8A8A8A] mb-0.5">Email</p><p className="text-sm font-mono text-[#F2F2F2]">{creds.email}</p></div>
             <CopyBtn text={creds.email} />
           </div>
-          <div className="border-t border-[#2A2F42]" />
+          <div className="border-t border-[#2A2A2A]" />
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-[#6B7280] mb-0.5">Contraseña generada</p><p className="text-sm font-mono text-[#7B61FF] font-bold tracking-widest">{creds.password}</p></div>
+            <div><p className="text-xs text-[#8A8A8A] mb-0.5">Contraseña generada</p><p className="text-sm font-mono text-[#FF7A1A] font-bold tracking-widest">{creds.password}</p></div>
             <CopyBtn text={creds.password} />
           </div>
         </div>
         <button onClick={() => navigator.clipboard.writeText(`Email: ${creds.email}\nContraseña: ${creds.password}`)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-[#2A2F42] rounded-xl text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-[#2A2A2A] rounded-xl text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">
           <Copy size={13} /> Copiar todo
         </button>
-        <button onClick={onClose} className="w-full px-4 py-2.5 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] transition-colors cursor-pointer">
+        <button onClick={onClose} className="w-full px-4 py-2.5 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] transition-colors cursor-pointer">
           Entendido
         </button>
       </div>
@@ -258,11 +258,11 @@ export default function ClientesPage() {
       {/* Cabecera */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#E8EAF0]">Clientes</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">{clients.length} clientes registrados</p>
+          <h1 className="text-2xl font-bold text-[#F2F2F2]">Clientes</h1>
+          <p className="text-sm text-[#8A8A8A] mt-0.5">{clients.length} clientes registrados</p>
         </div>
         <button onClick={() => { setForm(emptyForm); setError(null); setAddOpen(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#7B61FF] hover:bg-[#5B41DF] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-[0_0_20px_rgba(123,97,255,0.3)]">
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#FF7A1A] hover:bg-[#E0650A] text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-[0_0_20px_rgba(255,122,26,0.3)]">
           <Plus size={15} /> Agregar cliente
         </button>
       </div>
@@ -277,26 +277,26 @@ export default function ClientesPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8A8A]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cliente..."
-            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-[#141720] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF]" />
+            className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl bg-[#141414] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A]" />
         </div>
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-[#6B7280]" />
+          <Filter size={14} className="text-[#8A8A8A]" />
           <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
-            className="px-3 py-2.5 text-sm rounded-xl bg-[#141720] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF] cursor-pointer">
+            className="px-3 py-2.5 text-sm rounded-xl bg-[#141414] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A] cursor-pointer">
             <option value="">Todos los planes</option>
             {PLANS.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="px-3 py-2.5 text-sm rounded-xl bg-[#141720] border border-[#2A2F42] text-[#E8EAF0] focus:outline-none focus:border-[#7B61FF] cursor-pointer">
+            className="px-3 py-2.5 text-sm rounded-xl bg-[#141414] border border-[#2A2A2A] text-[#F2F2F2] focus:outline-none focus:border-[#FF7A1A] cursor-pointer">
             <option value="">Todos los estados</option>
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
             <option value="expiring">Por vencer</option>
           </select>
           {filterStatus && (
-            <button onClick={() => setFilterStatus('')} className="text-xs text-[#6B7280] hover:text-[#E8EAF0] cursor-pointer px-2 py-1 rounded-lg hover:bg-[#1C2030] transition-colors">
+            <button onClick={() => setFilterStatus('')} className="text-xs text-[#8A8A8A] hover:text-[#F2F2F2] cursor-pointer px-2 py-1 rounded-lg hover:bg-[#1C1C1C] transition-colors">
               Limpiar ✕
             </button>
           )}
@@ -304,21 +304,21 @@ export default function ClientesPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#2A2F42] bg-[#0D0F14]">
+              <tr className="border-b border-[#2A2A2A] bg-[#0A0A0A]">
                 {['Cliente', 'Plan', 'WhatsApp', 'Estado', 'Vencimiento', 'Credenciales', 'Acciones'].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#8A8A8A] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2A2F42]">
+            <tbody className="divide-y divide-[#2A2A2A]">
               {loading ? (
-                <tr><td colSpan={7} className="px-5 py-12 text-center"><Loader2 size={20} className="animate-spin text-[#7B61FF] mx-auto" /></td></tr>
+                <tr><td colSpan={7} className="px-5 py-12 text-center"><Loader2 size={20} className="animate-spin text-[#FF7A1A] mx-auto" /></td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[#6B7280]">
+                <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[#8A8A8A]">
                   {filterStatus ? `No hay clientes ${filterStatus === 'active' ? 'activos' : filterStatus === 'inactive' ? 'inactivos' : 'por vencer'}` : 'No se encontraron clientes'}
                 </td></tr>
               ) : filtered.map(c => {
@@ -327,19 +327,19 @@ export default function ClientesPage() {
                 const isToggling  = toggling  === c.id
                 const isResetting = resetting === c.id
                 return (
-                  <tr key={c.id} className={`transition-all ${isInactive ? 'opacity-60 bg-[#0D0F14]/50' : 'hover:bg-[#1C2030]'}`}>
+                  <tr key={c.id} className={`transition-all ${isInactive ? 'opacity-60 bg-[#0A0A0A]/50' : 'hover:bg-[#1C1C1C]'}`}>
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-[#E8EAF0]">{c.name}</p>
-                      <p className="text-xs text-[#6B7280] mt-0.5">{c.email}</p>
+                      <p className="font-semibold text-[#F2F2F2]">{c.name}</p>
+                      <p className="text-xs text-[#8A8A8A] mt-0.5">{c.email}</p>
                     </td>
                     <td className="px-5 py-4"><PlanBadge plan={c.plan} /></td>
                     <td className="px-5 py-4">
                       <StatusBadge status={c.waStatus === 'pending' ? 'inactive' : c.waStatus} label={c.waStatus === 'connected' ? 'Conectado' : c.waStatus === 'pending' ? 'Pendiente' : 'Sin conectar'} />
-                      {c.phone && <p className="text-xs text-[#6B7280] mt-1">{c.phone}</p>}
+                      {c.phone && <p className="text-xs text-[#8A8A8A] mt-1">{c.phone}</p>}
                     </td>
                     <td className="px-5 py-4"><StatusBadge status={c.status} /></td>
                     <td className="px-5 py-4">
-                      <p className={`text-sm font-medium ${days <= 7 ? 'text-[#FF4D6A]' : days <= 30 ? 'text-[#F59E0B]' : 'text-[#6B7280]'}`}>
+                      <p className={`text-sm font-medium ${days <= 7 ? 'text-[#FF4D6A]' : days <= 30 ? 'text-[#F59E0B]' : 'text-[#8A8A8A]'}`}>
                         {fmt(c.expiryDate)}
                       </p>
                       {days <= 7 && days > 0 && <p className="text-[10px] text-[#FF4D6A] mt-0.5">{days}d restantes</p>}
@@ -351,7 +351,7 @@ export default function ClientesPage() {
                         title="Resetear contraseña"
                         onClick={() => handleResetPassword(c)}
                         disabled={isResetting}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#7B61FF] hover:border-[#7B61FF]/50 hover:bg-[#7B61FF]/8 transition-colors cursor-pointer disabled:opacity-40"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#FF7A1A] hover:border-[#FF7A1A]/50 hover:bg-[#FF7A1A]/8 transition-colors cursor-pointer disabled:opacity-40"
                       >
                         {isResetting ? <Loader2 size={11} className="animate-spin" /> : <KeyRound size={11} />}
                         {isResetting ? 'Reseteando...' : 'Resetear'}
@@ -361,12 +361,12 @@ export default function ClientesPage() {
                       <div className="flex items-center gap-1">
                         {/* Ver / WABA */}
                         <button title="Ver detalle / WABA" onClick={() => router.push(`/admin/clientes/${c.id}`)}
-                          className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#7B61FF] hover:bg-[#7B61FF]/10 transition-colors cursor-pointer">
+                          className="p-1.5 rounded-lg text-[#8A8A8A] hover:text-[#FF7A1A] hover:bg-[#FF7A1A]/10 transition-colors cursor-pointer">
                           <Eye size={13} />
                         </button>
                         {/* Editar */}
                         <button title="Editar" onClick={() => openEdit(c)}
-                          className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#7B61FF] hover:bg-[#7B61FF]/10 transition-colors cursor-pointer">
+                          className="p-1.5 rounded-lg text-[#8A8A8A] hover:text-[#FF7A1A] hover:bg-[#FF7A1A]/10 transition-colors cursor-pointer">
                           <Pencil size={13} />
                         </button>
                         {/* Activar / Desactivar — directo, sin confirm */}
@@ -374,7 +374,7 @@ export default function ClientesPage() {
                           title={isInactive ? 'Activar cliente' : 'Desactivar cliente'}
                           onClick={() => handleToggle(c)}
                           disabled={isToggling}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${isInactive ? 'text-[#6B7280] hover:text-[#00E5A0] hover:bg-[#00E5A0]/10' : 'text-[#6B7280] hover:text-[#F59E0B] hover:bg-[#F59E0B]/10'}`}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-40 ${isInactive ? 'text-[#8A8A8A] hover:text-[#00E5A0] hover:bg-[#00E5A0]/10' : 'text-[#8A8A8A] hover:text-[#F59E0B] hover:bg-[#F59E0B]/10'}`}
                         >
                           {isToggling
                             ? <Loader2 size={13} className="animate-spin" />
@@ -382,7 +382,7 @@ export default function ClientesPage() {
                         </button>
                         {/* Eliminar */}
                         <button title="Eliminar" onClick={() => setConfirmDelete(c)}
-                          className="p-1.5 rounded-lg text-[#6B7280] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
+                          className="p-1.5 rounded-lg text-[#8A8A8A] hover:text-[#FF4D6A] hover:bg-[#FF4D6A]/10 transition-colors cursor-pointer">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -393,9 +393,9 @@ export default function ClientesPage() {
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-3 border-t border-[#2A2F42] bg-[#0D0F14] flex items-center justify-between">
-          <p className="text-xs text-[#6B7280]">Mostrando {filtered.length} de {clients.length} clientes</p>
-          {filterStatus && <p className="text-xs text-[#7B61FF]">Filtro activo: {filterStatus === 'active' ? 'Activos' : filterStatus === 'inactive' ? 'Inactivos' : 'Por vencer'}</p>}
+        <div className="px-5 py-3 border-t border-[#2A2A2A] bg-[#0A0A0A] flex items-center justify-between">
+          <p className="text-xs text-[#8A8A8A]">Mostrando {filtered.length} de {clients.length} clientes</p>
+          {filterStatus && <p className="text-xs text-[#FF7A1A]">Filtro activo: {filterStatus === 'active' ? 'Activos' : filterStatus === 'inactive' ? 'Inactivos' : 'Por vencer'}</p>}
         </div>
       </div>
 
@@ -403,10 +403,10 @@ export default function ClientesPage() {
       <Modal open={addOpen} onClose={() => { setAddOpen(false); setError(null) }} title="Agregar cliente">
         <ClientForm value={form} onChange={setForm} />
         {error && <p className="mt-3 text-xs text-[#FF4D6A]">{error}</p>}
-        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2F42]">
-          <button onClick={() => { setAddOpen(false); setError(null) }} className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">Cancelar</button>
+        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2A2A]">
+          <button onClick={() => { setAddOpen(false); setError(null) }} className="px-4 py-2 text-sm rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">Cancelar</button>
           <button onClick={handleAdd} disabled={!form.name || !form.email || saving}
-            className="flex items-center gap-2 px-5 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">
+            className="flex items-center gap-2 px-5 py-2 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] disabled:opacity-40 transition-colors cursor-pointer">
             {saving && <Loader2 size={13} className="animate-spin" />}
             {saving ? 'Guardando...' : 'Guardar cliente'}
           </button>
@@ -417,10 +417,10 @@ export default function ClientesPage() {
       <Modal open={!!editClient} onClose={() => { setEditClient(null); setError(null) }} title={`Editar: ${editClient?.name ?? ''}`}>
         <ClientForm value={editForm} onChange={setEditForm} />
         {error && <p className="mt-3 text-xs text-[#FF4D6A]">{error}</p>}
-        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2F42]">
-          <button onClick={() => { setEditClient(null); setError(null) }} className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">Cancelar</button>
+        <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-[#2A2A2A]">
+          <button onClick={() => { setEditClient(null); setError(null) }} className="px-4 py-2 text-sm rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">Cancelar</button>
           <button onClick={handleEdit} disabled={!editForm.name || !editForm.email || saving}
-            className="flex items-center gap-2 px-5 py-2 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer">
+            className="flex items-center gap-2 px-5 py-2 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] disabled:opacity-40 transition-colors cursor-pointer">
             {saving && <Loader2 size={13} className="animate-spin" />}
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
@@ -434,30 +434,30 @@ export default function ClientesPage() {
       {resetCreds && (
         <Modal open onClose={() => setResetCreds(null)} title="Contraseña reseteada">
           <div className="space-y-4">
-            <p className="text-sm text-[#6B7280]">Comparte las nuevas credenciales con el cliente.</p>
-            <div className="bg-[#0D0F14] border border-[#2A2F42] rounded-xl p-4 space-y-3">
+            <p className="text-sm text-[#8A8A8A]">Comparte las nuevas credenciales con el cliente.</p>
+            <div className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-[#6B7280] mb-0.5">Email</p>
-                  <p className="text-sm font-mono text-[#E8EAF0]">{resetCreds.email}</p>
+                  <p className="text-xs text-[#8A8A8A] mb-0.5">Email</p>
+                  <p className="text-sm font-mono text-[#F2F2F2]">{resetCreds.email}</p>
                 </div>
                 <CopyBtn text={resetCreds.email} />
               </div>
-              <div className="border-t border-[#2A2F42]" />
+              <div className="border-t border-[#2A2A2A]" />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-[#6B7280] mb-0.5">Nueva contraseña</p>
-                  <p className="text-sm font-mono text-[#7B61FF] font-bold tracking-widest">{resetCreds.password}</p>
+                  <p className="text-xs text-[#8A8A8A] mb-0.5">Nueva contraseña</p>
+                  <p className="text-sm font-mono text-[#FF7A1A] font-bold tracking-widest">{resetCreds.password}</p>
                 </div>
                 <CopyBtn text={resetCreds.password} />
               </div>
             </div>
             <button onClick={() => navigator.clipboard.writeText(`Email: ${resetCreds.email}\nContraseña: ${resetCreds.password}`)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-[#2A2F42] rounded-xl text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm border border-[#2A2A2A] rounded-xl text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">
               <Copy size={13} /> Copiar todo
             </button>
             <button onClick={() => setResetCreds(null)}
-              className="w-full px-4 py-2.5 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] transition-colors cursor-pointer">
+              className="w-full px-4 py-2.5 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] transition-colors cursor-pointer">
               Entendido
             </button>
           </div>

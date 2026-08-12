@@ -185,5 +185,6 @@ async def simulate(
         training_blocks=training_contents,
         user_message=body.message,
         history=body.history,
+        agent_system_prompt=agent.effective_system_prompt,
     )
     return Response(data=SimulatorResponse(reply=reply).model_dump())

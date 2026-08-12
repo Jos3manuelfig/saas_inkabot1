@@ -267,7 +267,7 @@ async def _handle_incoming_message(
         )
         agent = agent_result.scalar_one_or_none()
 
-        agent_prompt = agent.system_prompt if agent else None
+        agent_prompt = agent.effective_system_prompt if agent else None
         training_contents = [b.content for b in agent.training_blocks] if agent else []
 
         # 5. Guardar mensaje del usuario

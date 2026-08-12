@@ -12,6 +12,12 @@ class AgentUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     is_active: bool | None = None
+    system_prompt: str | None = None
+    gender: str | None = None
+    tone: str | None = None
+    formality: str | None = None
+    payment_info: str | None = None
+    shipping_info: str | None = None
 
 
 class TrainingBlockOut(BaseModel):
@@ -28,6 +34,12 @@ class AgentOut(BaseModel):
     name: str
     description: str | None
     is_active: bool
+    system_prompt: str | None = None
+    gender: str | None = None
+    tone: str | None = None
+    formality: str | None = None
+    payment_info: str | None = None
+    shipping_info: str | None = None
     created_at: datetime
     training_blocks: list[TrainingBlockOut] = []
 

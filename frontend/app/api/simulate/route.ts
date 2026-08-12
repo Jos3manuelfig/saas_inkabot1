@@ -4,20 +4,23 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
-function buildSystemPrompt(trainingBlocks: string[]): string {
-  if (!trainingBlocks.length) {
+function buildSystemPrompt(trainingBlocks: string[], agentPrompt?: string): string {
+  const parts: string[] = []
+  if (agentPrompt?.trim()) parts.push(agentPrompt.trim())
+  if (trainingBlocks.length) parts.push(`INFORMACIÓN DE ENTRENAMIENTO:\n${trainingBlocks.join('\n\n')}`)
+
+  if (!parts.length) {
     return 'Eres un asistente de ventas amable y profesional. Responde las preguntas de los clientes de forma concisa.'
   }
-  const context = trainingBlocks.join('\n\n')
-  return `Eres un agente de ventas virtual. Usa TODA la siguiente información para responder a los clientes:
 
-${context}
-
-INSTRUCCIONES:
-- Responde basándote en la información anterior.
-- Si no tienes información sobre algo, dilo con amabilidad.
-- Sé conciso, amigable y profesional.
-- Responde en el mismo idioma que el cliente.`
+  parts.push(
+    'INSTRUCCIONES:\n' +
+      '- Responde basándote en la información anterior.\n' +
+      '- Si no tienes información sobre algo, dilo con amabilidad.\n' +
+      '- Sé conciso, amigable y profesional.\n' +
+      '- Responde en el mismo idioma que el cliente.'
+  )
+  return parts.join('\n\n')
 }
 
 export async function POST(req: NextRequest) {
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { message, history = [], trainingBlocks = [] } = body
+    const { message, history = [], trainingBlocks = [], agentPrompt = '' } = body
 
     if (!message?.trim()) {
       return NextResponse.json({ error: 'message requerido' }, { status: 400 })
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     const client = new Anthropic({ apiKey })
 
-    const systemPrompt = buildSystemPrompt(trainingBlocks)
+    const systemPrompt = buildSystemPrompt(trainingBlocks, agentPrompt)
     const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
       ...history.slice(-20).map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',

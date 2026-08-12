@@ -8,29 +8,35 @@ class SimulatorService:
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         self.model = settings.ANTHROPIC_MODEL
 
-    def build_system_prompt(self, training_blocks: list[str]) -> str:
-        if not training_blocks:
+    def build_system_prompt(self, training_blocks: list[str], agent_system_prompt: str | None = None) -> str:
+        parts: list[str] = []
+        if agent_system_prompt:
+            parts.append(agent_system_prompt)
+
+        if training_blocks:
+            context = "\n\n---\n\n".join(training_blocks)
+            parts.append(f"INFORMACIÓN DE ENTRENAMIENTO:\n{context}")
+
+        if not parts:
             return "Eres un asistente de ventas amable y profesional. Responde preguntas de clientes."
 
-        context = "\n\n---\n\n".join(training_blocks)
-        return f"""Eres un agente de ventas virtual. Usa TODA la siguiente información como base de tu conocimiento para responder a los clientes.
-
-INFORMACIÓN DE ENTRENAMIENTO:
-{context}
-
-INSTRUCCIONES:
-- Responde siempre basándote en la información de entrenamiento anterior.
-- Si no tienes información sobre algo, dilo con amabilidad.
-- Sé conciso, amigable y profesional.
-- Responde en el mismo idioma que el cliente."""
+        parts.append(
+            "INSTRUCCIONES:\n"
+            "- Responde siempre basándote en la información anterior.\n"
+            "- Si no tienes información sobre algo, dilo con amabilidad.\n"
+            "- Sé conciso, amigable y profesional.\n"
+            "- Responde en el mismo idioma que el cliente."
+        )
+        return "\n\n".join(parts)
 
     async def chat(
         self,
         training_blocks: list[str],
         user_message: str,
         history: list[SimulatorMessage],
+        agent_system_prompt: str | None = None,
     ) -> str:
-        system_prompt = self.build_system_prompt(training_blocks)
+        system_prompt = self.build_system_prompt(training_blocks, agent_system_prompt)
 
         messages = [
             {"role": msg.role, "content": msg.content}

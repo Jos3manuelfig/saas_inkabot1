@@ -17,19 +17,19 @@ import { getSession } from '@/lib/auth'
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8003'
 
 function Box({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-[#141720] border border-[#2A2F42] rounded-2xl ${className}`}>{children}</div>
+  return <div className={`bg-[#141414] border border-[#2A2A2A] rounded-2xl ${className}`}>{children}</div>
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-[#6B7280] mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">{label}</label>
       {children}
     </div>
   )
 }
 
-const inputCls = "w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] placeholder:text-[#4B5563] focus:outline-none focus:border-[#7B61FF] transition-colors"
+const inputCls = "w-full px-3 py-2.5 text-sm rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] placeholder:text-[#4B5563] focus:outline-none focus:border-[#FF7A1A] transition-colors"
 
 // ── Pestaña WhatsApp ────────────────────────────────────────────────────────
 
@@ -56,11 +56,11 @@ function ConnectionIndicator({ status, error, verifying }: { status: WaStatus | 
     return (
       <div className="flex items-center gap-3">
         <div className="relative flex h-14 w-14 items-center justify-center">
-          <div className="h-14 w-14 rounded-full border-4 border-[#7B61FF]/20 border-t-[#7B61FF] animate-spin" />
+          <div className="h-14 w-14 rounded-full border-4 border-[#FF7A1A]/20 border-t-[#FF7A1A] animate-spin" />
         </div>
         <div>
           <p className="text-sm font-semibold text-[#F59E0B]">Verificando con Meta...</p>
-          <p className="text-xs text-[#6B7280]">Contactando la API de WhatsApp Business</p>
+          <p className="text-xs text-[#8A8A8A]">Contactando la API de WhatsApp Business</p>
         </div>
       </div>
     )
@@ -71,12 +71,12 @@ function ConnectionIndicator({ status, error, verifying }: { status: WaStatus | 
         <div className="relative flex h-14 w-14 items-center justify-center">
           <div className="absolute h-14 w-14 rounded-full bg-[#00E5A0]/15 animate-pulse" />
           <div className="h-10 w-10 rounded-full bg-[#00E5A0] flex items-center justify-center shadow-[0_0_20px_rgba(0,229,160,0.5)]">
-            <Wifi size={20} className="text-[#0D0F14]" strokeWidth={2.5} />
+            <Wifi size={20} className="text-[#0A0A0A]" strokeWidth={2.5} />
           </div>
         </div>
         <div>
           <p className="text-sm font-semibold text-[#00E5A0]">Conectado a Meta</p>
-          <p className="text-xs text-[#6B7280]">Credenciales verificadas correctamente</p>
+          <p className="text-xs text-[#8A8A8A]">Credenciales verificadas correctamente</p>
         </div>
       </div>
     )
@@ -89,19 +89,19 @@ function ConnectionIndicator({ status, error, verifying }: { status: WaStatus | 
         </div>
         <div>
           <p className="text-sm font-semibold text-[#FF4D6A]">Error de credenciales</p>
-          <p className="text-xs text-[#6B7280]">{error ?? 'Las credenciales no fueron aceptadas por Meta'}</p>
+          <p className="text-xs text-[#8A8A8A]">{error ?? 'Las credenciales no fueron aceptadas por Meta'}</p>
         </div>
       </div>
     )
   }
   return (
     <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-full bg-[#2A2F42] flex items-center justify-center">
-        <AlertCircle size={18} className="text-[#6B7280]" />
+      <div className="h-10 w-10 rounded-full bg-[#2A2A2A] flex items-center justify-center">
+        <AlertCircle size={18} className="text-[#8A8A8A]" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-[#6B7280]">Sin configurar</p>
-        <p className="text-xs text-[#6B7280]">Ingresa las credenciales WABA del cliente</p>
+        <p className="text-sm font-semibold text-[#8A8A8A]">Sin configurar</p>
+        <p className="text-xs text-[#8A8A8A]">Ingresa las credenciales WABA del cliente</p>
       </div>
     </div>
   )
@@ -184,28 +184,28 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
   const verificationError = result?.verification?.error ?? null
 
   if (loadingConfig) {
-    return <div className="flex justify-center py-12"><Loader2 size={18} className="animate-spin text-[#7B61FF]" /></div>
+    return <div className="flex justify-center py-12"><Loader2 size={18} className="animate-spin text-[#FF7A1A]" /></div>
   }
 
   return (
     <div className="space-y-5">
       {/* Estado de conexión — círculo verde o rojo */}
       <Box className="p-5">
-        <h3 className="text-sm font-semibold text-[#E8EAF0] mb-5">Estado de conexión Meta</h3>
+        <h3 className="text-sm font-semibold text-[#F2F2F2] mb-5">Estado de conexión Meta</h3>
         <ConnectionIndicator status={currentStatus} error={verificationError} verifying={saving} />
         {existing && !saving && (
-          <div className="mt-5 pt-4 border-t border-[#2A2F42] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="mt-5 pt-4 border-t border-[#2A2A2A] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div>
-              <p className="text-[#6B7280] mb-0.5">Número</p>
-              <p className="text-[#E8EAF0] font-mono">{existing.phone_number}</p>
+              <p className="text-[#8A8A8A] mb-0.5">Número</p>
+              <p className="text-[#F2F2F2] font-mono">{existing.phone_number}</p>
             </div>
             <div>
-              <p className="text-[#6B7280] mb-0.5">Phone Number ID</p>
-              <p className="text-[#E8EAF0] font-mono truncate">{existing.phone_number_id}</p>
+              <p className="text-[#8A8A8A] mb-0.5">Phone Number ID</p>
+              <p className="text-[#F2F2F2] font-mono truncate">{existing.phone_number_id}</p>
             </div>
             <div>
-              <p className="text-[#6B7280] mb-0.5">Token</p>
-              <p className="text-[#E8EAF0] font-mono">{existing.access_token_masked}</p>
+              <p className="text-[#8A8A8A] mb-0.5">Token</p>
+              <p className="text-[#F2F2F2] font-mono">{existing.access_token_masked}</p>
             </div>
           </div>
         )}
@@ -213,10 +213,10 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
 
       {/* Formulario */}
       <Box className="p-5">
-        <h3 className="text-sm font-semibold text-[#E8EAF0] mb-1">
+        <h3 className="text-sm font-semibold text-[#F2F2F2] mb-1">
           {existing ? 'Actualizar credenciales WABA' : 'Configurar WhatsApp Business'}
         </h3>
-        <p className="text-xs text-[#6B7280] mb-5">
+        <p className="text-xs text-[#8A8A8A] mb-5">
           Ingresa los datos de tu cuenta de Meta WhatsApp Business API. El sistema verificará las credenciales automáticamente.
         </p>
 
@@ -249,7 +249,7 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
               <button
                 type="button"
                 onClick={() => setShowToken(s => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#E8EAF0] transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8A8A] hover:text-[#F2F2F2] transition-colors cursor-pointer"
               >
                 {showToken ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
@@ -260,24 +260,24 @@ function WhatsAppTab({ tenantId, tenantPhone }: { tenantId: string; tenantPhone:
             <button
               onClick={handleSave}
               disabled={saving || !form.phone_number || !form.phone_number_id || (!form.access_token && !existing)}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm rounded-xl bg-[#7B61FF] text-white font-semibold hover:bg-[#5B41DF] disabled:opacity-40 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 text-sm rounded-xl bg-[#FF7A1A] text-white font-semibold hover:bg-[#E0650A] disabled:opacity-40 transition-colors cursor-pointer"
             >
               {saving
                 ? <><Loader2 size={14} className="animate-spin" /> Verificando con Meta...</>
                 : <><Save size={14} /> Guardar y verificar</>}
             </button>
             {existing && (
-              <button onClick={loadConfig} className="flex items-center gap-1.5 px-3 py-2.5 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+              <button onClick={loadConfig} className="flex items-center gap-1.5 px-3 py-2.5 text-sm rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">
                 <RefreshCw size={13} /> Recargar
               </button>
             )}
           </div>
 
-          <div className="mt-2 px-4 py-3 rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-xs text-[#6B7280] space-y-1">
-            <p className="font-medium text-[#E8EAF0]">¿Dónde obtengo estos datos?</p>
-            <p>1. Entra a <span className="text-[#7B61FF]">business.facebook.com</span> → WhatsApp Manager</p>
+          <div className="mt-2 px-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-xs text-[#8A8A8A] space-y-1">
+            <p className="font-medium text-[#F2F2F2]">¿Dónde obtengo estos datos?</p>
+            <p>1. Entra a <span className="text-[#FF7A1A]">business.facebook.com</span> → WhatsApp Manager</p>
             <p>2. Selecciona tu número → Panel de control → API Setup</p>
-            <p>3. Copia el <span className="text-[#E8EAF0]">Phone Number ID</span> y genera un <span className="text-[#E8EAF0]">Access Token permanente</span></p>
+            <p>3. Copia el <span className="text-[#F2F2F2]">Phone Number ID</span> y genera un <span className="text-[#F2F2F2]">Access Token permanente</span></p>
           </div>
         </div>
       </Box>
@@ -360,20 +360,20 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     {/* Modal de confirmación reset demo */}
     {showResetModal && (
       <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-        <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6 max-w-md w-full shadow-2xl">
           <div className="flex items-start gap-3 mb-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15">
               <AlertTriangle size={20} className="text-orange-400" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-[#E8EAF0]">Resetear cliente demo</h3>
-              <p className="text-sm text-[#6B7280] mt-1">
-                ¿Estás seguro? Esto eliminará <span className="text-[#E8EAF0] font-medium">todo el historial y entrenamiento</span> de este cliente. Esta acción no se puede deshacer.
+              <h3 className="text-base font-semibold text-[#F2F2F2]">Resetear cliente demo</h3>
+              <p className="text-sm text-[#8A8A8A] mt-1">
+                ¿Estás seguro? Esto eliminará <span className="text-[#F2F2F2] font-medium">todo el historial y entrenamiento</span> de este cliente. Esta acción no se puede deshacer.
               </p>
             </div>
           </div>
           <div className="mt-4">
-            <label className="block text-xs font-medium text-[#6B7280] mb-1.5">
+            <label className="block text-xs font-medium text-[#8A8A8A] mb-1.5">
               Nueva contraseña <span className="text-[#4B5563]">(opcional — vacío genera una aleatoria)</span>
             </label>
             <input
@@ -381,13 +381,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
               value={demoPassword}
               onChange={e => setDemoPassword(e.target.value)}
               placeholder="Ej: demo1234"
-              className="w-full px-3 py-2.5 text-sm rounded-xl bg-[#0D0F14] border border-[#2A2F42] text-[#E8EAF0] placeholder:text-[#4B5563] focus:outline-none focus:border-[#7B61FF] transition-colors font-mono"
+              className="w-full px-3 py-2.5 text-sm rounded-xl bg-[#0A0A0A] border border-[#2A2A2A] text-[#F2F2F2] placeholder:text-[#4B5563] focus:outline-none focus:border-[#FF7A1A] transition-colors font-mono"
             />
           </div>
           <div className="flex gap-3 justify-end pt-4">
             <button
               onClick={() => { setShowResetModal(false); setDemoPassword('') }}
-              className="px-4 py-2 text-sm rounded-xl border border-[#2A2F42] text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer"
+              className="px-4 py-2 text-sm rounded-xl border border-[#2A2A2A] text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
@@ -408,12 +408,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
       {/* Cabecera */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030] rounded-xl transition-colors cursor-pointer">
+        <button onClick={() => router.back()} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C] rounded-xl transition-colors cursor-pointer">
           <ArrowLeft size={14} /> Volver
         </button>
         <div>
-          <h1 className="text-xl font-bold text-[#E8EAF0]">{name}</h1>
-          <p className="text-sm text-[#6B7280]">{email}</p>
+          <h1 className="text-xl font-bold text-[#F2F2F2]">{name}</h1>
+          <p className="text-sm text-[#8A8A8A]">{email}</p>
         </div>
         </div>
 
@@ -432,7 +432,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 {resetMsg.text}
               </div>
               {resetMsg.ok && resetMsg.password && (
-                <div className="mt-1.5 font-mono text-[#E8EAF0] bg-[#0D0F14] px-2 py-1 rounded-lg">
+                <div className="mt-1.5 font-mono text-[#F2F2F2] bg-[#0A0A0A] px-2 py-1 rounded-lg">
                   Contraseña: <span className="text-[#00E5A0] font-semibold">{resetMsg.password}</span>
                 </div>
               )}
@@ -442,13 +442,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Pestañas */}
-      <div className="flex gap-1 rounded-xl border border-[#2A2F42] bg-[#0D0F14] p-1 w-fit">
+      <div className="flex gap-1 rounded-xl border border-[#2A2A2A] bg-[#0A0A0A] p-1 w-fit">
         {tabs.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               tab === t.key
-                ? 'bg-[#7B61FF] text-white shadow-[0_0_12px_rgba(123,97,255,0.35)]'
-                : 'text-[#6B7280] hover:text-[#E8EAF0]'
+                ? 'bg-[#FF7A1A] text-white shadow-[0_0_12px_rgba(255,122,26,0.35)]'
+                : 'text-[#8A8A8A] hover:text-[#F2F2F2]'
             }`}>
             {t.label}
           </button>
@@ -460,16 +460,16 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         <div className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Box className="p-5">
-              <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Datos del cliente</h3>
+              <h3 className="text-sm font-semibold text-[#F2F2F2] mb-4">Datos del cliente</h3>
               <div className="space-y-3">
                 {[
                   { label: 'Plan',     value: <PlanBadge plan={plan as never} /> },
                   { label: 'Estado',   value: <StatusBadge status={tenant?.is_active ? 'active' : 'inactive'} /> },
-                  { label: 'Teléfono', value: <div className="flex items-center gap-1 text-xs text-[#E8EAF0]"><Phone size={11} />{tenant?.phone ?? '—'}</div> },
-                  { label: 'Vence',    value: <span className={`text-xs font-medium ${days <= 7 ? 'text-[#FF4D6A]' : 'text-[#6B7280]'}`}>{endDate ? formatDate(endDate) : '—'}</span> },
+                  { label: 'Teléfono', value: <div className="flex items-center gap-1 text-xs text-[#F2F2F2]"><Phone size={11} />{tenant?.phone ?? '—'}</div> },
+                  { label: 'Vence',    value: <span className={`text-xs font-medium ${days <= 7 ? 'text-[#FF4D6A]' : 'text-[#8A8A8A]'}`}>{endDate ? formatDate(endDate) : '—'}</span> },
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between py-2 border-b border-[#2A2F42] last:border-0">
-                    <span className="text-xs text-[#6B7280]">{label}</span>
+                  <div key={label} className="flex items-center justify-between py-2 border-b border-[#2A2A2A] last:border-0">
+                    <span className="text-xs text-[#8A8A8A]">{label}</span>
                     {value}
                   </div>
                 ))}
@@ -484,20 +484,20 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           <Box className="p-5">
-            <h3 className="text-sm font-semibold text-[#E8EAF0] mb-4">Mensajes (últimos 7 días)</h3>
+            <h3 className="text-sm font-semibold text-[#F2F2F2] mb-4">Mensajes (últimos 7 días)</h3>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={mockMessageStats} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="adV" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7B61FF" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#7B61FF" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#FF7A1A" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#FF7A1A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2F42" />
-                <XAxis dataKey="date" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#1C2030', border: '1px solid #2A2F42', borderRadius: 10, color: '#E8EAF0', fontSize: 12 }} />
-                <Area type="monotone" dataKey="sent" stroke="#7B61FF" strokeWidth={2} fill="url(#adV)" name="Enviados" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
+                <XAxis dataKey="date" tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: '#1C1C1C', border: '1px solid #2A2A2A', borderRadius: 10, color: '#F2F2F2', fontSize: 12 }} />
+                <Area type="monotone" dataKey="sent" stroke="#FF7A1A" strokeWidth={2} fill="url(#adV)" name="Enviados" />
                 <Area type="monotone" dataKey="received" stroke="#00E5A0" strokeWidth={2} fill="none" name="Recibidos" />
               </AreaChart>
             </ResponsiveContainer>
@@ -511,21 +511,21 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
       {/* Pestaña: Pagos */}
       {tab === 'pagos' && (
         <Box className="overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2F42]">
-            <h3 className="text-sm font-semibold text-[#E8EAF0]">Historial de pagos</h3>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl bg-[#7B61FF] text-white hover:bg-[#5B41DF] transition-colors cursor-pointer">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2A2A]">
+            <h3 className="text-sm font-semibold text-[#F2F2F2]">Historial de pagos</h3>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-xl bg-[#FF7A1A] text-white hover:bg-[#E0650A] transition-colors cursor-pointer">
               <PlusCircle size={13} /> Registrar pago
             </button>
           </div>
           {payments.length === 0 ? (
-            <p className="px-5 py-8 text-center text-sm text-[#6B7280]">No hay pagos registrados para este cliente</p>
+            <p className="px-5 py-8 text-center text-sm text-[#8A8A8A]">No hay pagos registrados para este cliente</p>
           ) : (
-            <div className="divide-y divide-[#2A2F42]">
+            <div className="divide-y divide-[#2A2A2A]">
               {payments.map(p => (
-                <div key={p.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-[#1C2030] transition-colors">
+                <div key={p.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-[#1C1C1C] transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-[#E8EAF0]">{p.plan}</p>
-                    <p className="text-xs text-[#6B7280] mt-0.5">{formatDate(p.date)} · {p.method}</p>
+                    <p className="text-sm font-medium text-[#F2F2F2]">{p.plan}</p>
+                    <p className="text-xs text-[#8A8A8A] mt-0.5">{formatDate(p.date)} · {p.method}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-bold text-[#00E5A0]">S/ {p.amount}</span>

@@ -38,6 +38,34 @@ export async function login(email: string, password: string): Promise<{ user: Us
   return { user, token }
 }
 
+export interface RegisterPayload {
+  name: string
+  email: string
+  phone?: string
+  password: string
+  plan: string
+}
+
+export async function register(payload: RegisterPayload): Promise<{ tenantId: string; email: string }> {
+  let res: Response
+  try {
+    res = await fetch(`${API_URL}/api/v1/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw new Error('NETWORK_ERROR')
+  }
+
+  const json = await res.json().catch(() => ({}))
+
+  if (res.status === 400) throw new Error(json?.detail ?? 'EMAIL_IN_USE')
+  if (!res.ok) throw new Error('SERVER_ERROR')
+
+  return { tenantId: json.data.tenant_id, email: json.data.email }
+}
+
 export function saveSession(user: User, token: string) {
   localStorage.setItem('inkabot_token', token)
   localStorage.setItem('inkabot_user', JSON.stringify(user))

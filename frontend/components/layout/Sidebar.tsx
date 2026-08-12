@@ -47,19 +47,19 @@ export function Sidebar({ role, isOpen = false, onClose }: SidebarProps) {
         className={`
           fixed inset-y-0 left-0 flex flex-col z-50
           w-[280px] md:w-60
-          bg-[#0D0F14] border-r border-[#2A2F42]
+          bg-[#0A0A0A] border-r border-[#2A2A2A]
           transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
         `}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-[#2A2F42]">
-          <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-[#7B61FF] shadow-[0_0_16px_rgba(123,97,255,0.5)]">
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-[#2A2A2A]">
+          <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-[#FF7A1A] shadow-[0_0_16px_rgba(255,122,26,0.5)]">
             <Zap size={18} className="text-white" strokeWidth={2.5} />
           </div>
           <span className="text-lg font-bold tracking-wider text-white">
-            INKA<span className="text-[#7B61FF]">BOT</span>
+            INKA<span className="text-[#FF7A1A]">BOT</span>
           </span>
         </div>
 
@@ -74,23 +74,23 @@ export function Sidebar({ role, isOpen = false, onClose }: SidebarProps) {
                 onClick={onClose}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                   active
-                    ? 'bg-[#7B61FF]/15 text-[#7B61FF]'
-                    : 'text-[#6B7280] hover:text-[#E8EAF0] hover:bg-[#1C2030]'
+                    ? 'bg-[#FF7A1A]/15 text-[#FF7A1A]'
+                    : 'text-[#8A8A8A] hover:text-[#F2F2F2] hover:bg-[#1C1C1C]'
                 }`}
               >
                 <Icon size={17} strokeWidth={active ? 2.5 : 2} />
                 {label}
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#7B61FF]" />}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FF7A1A]" />}
               </Link>
             )
           })}
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-4 border-t border-[#2A2F42]">
-          <div className="rounded-xl bg-[#7B61FF]/8 border border-[#7B61FF]/20 px-3 py-2.5">
-            <p className="text-xs font-semibold text-[#7B61FF]">INKABOT Pro</p>
-            <p className="text-[10px] text-[#6B7280] mt-0.5">Panel de administración</p>
+        <div className="px-4 py-4 border-t border-[#2A2A2A]">
+          <div className="rounded-xl bg-[#FF7A1A]/8 border border-[#FF7A1A]/20 px-3 py-2.5">
+            <p className="text-xs font-semibold text-[#FF7A1A]">INKABOT Pro</p>
+            <p className="text-[10px] text-[#8A8A8A] mt-0.5">Panel de administración</p>
           </div>
         </div>
       </aside>

@@ -10,7 +10,7 @@ interface CardProps {
 
 export function Card({ children, className = '', glow }: CardProps) {
   const glowClass = glow === 'violet'
-    ? 'shadow-[0_0_20px_rgba(108,63,255,0.15)]'
+    ? 'shadow-[0_0_20px_rgba(255,122,26,0.15)]'
     : glow === 'cyan'
     ? 'shadow-[0_0_20px_rgba(0,229,255,0.1)]'
     : ''
@@ -33,7 +33,7 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  violet: { bg: 'bg-[#6c3fff]/10', text: 'text-[#6c3fff]', value: 'text-[#6c3fff]' },
+  violet: { bg: 'bg-[#FF7A1A]/10', text: 'text-[#FF7A1A]', value: 'text-[#FF7A1A]' },
   cyan:   { bg: 'bg-[#00e5ff]/10', text: 'text-[#00e5ff]', value: 'text-[#00e5ff]' },
   green:  { bg: 'bg-green-500/10',  text: 'text-green-400',  value: 'text-green-400' },
   yellow: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', value: 'text-yellow-400' },

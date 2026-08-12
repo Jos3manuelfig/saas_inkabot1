@@ -96,7 +96,7 @@ export default function MiPlanPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <Loader2 size={24} className="animate-spin text-[#7B61FF]" />
+      <Loader2 size={24} className="animate-spin text-[#FF7A1A]" />
     </div>
   )
   if (error || !planStats) return (
@@ -118,8 +118,8 @@ export default function MiPlanPage() {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h1 className="text-2xl font-bold text-[#E8EAF0]">Mi Plan</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">Detalles de tu suscripción INKABOT</p>
+        <h1 className="text-2xl font-bold text-[#F2F2F2]">Mi Plan</h1>
+        <p className="text-sm text-[#8A8A8A] mt-0.5">Detalles de tu suscripción INKABOT</p>
       </div>
 
       {/* Alerta de vencimiento */}
@@ -144,23 +144,23 @@ export default function MiPlanPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Card plan */}
-        <div className="bg-[#141720] border border-[#7B61FF]/30 rounded-2xl p-6 shadow-[0_0_24px_rgba(123,97,255,0.12)]">
+        <div className="bg-[#141414] border border-[#FF7A1A]/30 rounded-2xl p-6 shadow-[0_0_24px_rgba(255,122,26,0.12)]">
           <div className="flex items-center gap-2 mb-5">
-            <Star size={16} className="text-[#7B61FF]" />
-            <h3 className="text-sm font-semibold text-[#E8EAF0]">Plan actual</h3>
+            <Star size={16} className="text-[#FF7A1A]" />
+            <h3 className="text-sm font-semibold text-[#F2F2F2]">Plan actual</h3>
           </div>
 
           <div className="flex items-end justify-between mb-6">
             <PlanBadge plan={plan} />
             <div className="text-right">
-              <p className="text-3xl font-bold text-[#E8EAF0]">S/ {cfg.price}</p>
-              <p className="text-xs text-[#6B7280]">por mes</p>
+              <p className="text-3xl font-bold text-[#F2F2F2]">S/ {cfg.price}</p>
+              <p className="text-xs text-[#8A8A8A]">por mes</p>
             </div>
           </div>
 
           <div className="space-y-2.5">
             {cfg.features.map(f => (
-              <div key={f} className="flex items-center gap-2.5 text-sm text-[#E8EAF0]">
+              <div key={f} className="flex items-center gap-2.5 text-sm text-[#F2F2F2]">
                 <CheckCircle size={14} className="text-[#00E5A0] shrink-0" />
                 {f}
               </div>
@@ -169,27 +169,27 @@ export default function MiPlanPage() {
         </div>
 
         {/* Card suscripción */}
-        <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl p-6">
-          <h3 className="text-sm font-semibold text-[#E8EAF0] mb-5">Detalles de suscripción</h3>
+        <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-[#F2F2F2] mb-5">Detalles de suscripción</h3>
 
           <div className="space-y-4">
             {/* Estado */}
-            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2F42]">
-              <span className="text-sm text-[#6B7280]">Estado</span>
+            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2A2A]">
+              <span className="text-sm text-[#8A8A8A]">Estado</span>
               <StatusBadge status={subStatus} label={isExpired ? 'Vencido' : 'Activo'} />
             </div>
 
             {/* Vencimiento */}
-            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2F42]">
-              <span className="text-sm text-[#6B7280]">Vencimiento</span>
-              <span className={`text-sm font-medium ${isExpiring || isExpired ? 'text-[#F59E0B]' : 'text-[#E8EAF0]'}`}>
+            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2A2A]">
+              <span className="text-sm text-[#8A8A8A]">Vencimiento</span>
+              <span className={`text-sm font-medium ${isExpiring || isExpired ? 'text-[#F59E0B]' : 'text-[#F2F2F2]'}`}>
                 {fmtDate(planStats.end_date)}
               </span>
             </div>
 
             {/* Días restantes */}
-            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2F42]">
-              <span className="text-sm text-[#6B7280]">Días restantes</span>
+            <div className="flex items-center justify-between py-2.5 border-b border-[#2A2A2A]">
+              <span className="text-sm text-[#8A8A8A]">Días restantes</span>
               <span className={`text-2xl font-bold ${isExpired ? 'text-[#FF4D6A]' : isExpiring ? 'text-[#F59E0B]' : 'text-[#00E5A0]'}`}>
                 {isExpired ? '0' : days}d
               </span>
@@ -198,25 +198,25 @@ export default function MiPlanPage() {
             {/* Uso de conversaciones */}
             <div className="py-2.5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-[#6B7280]">Conversaciones este mes</span>
-                <span className={`text-sm font-semibold ${convWarning ? 'text-[#F59E0B]' : 'text-[#E8EAF0]'}`}>
+                <span className="text-sm text-[#8A8A8A]">Conversaciones este mes</span>
+                <span className={`text-sm font-semibold ${convWarning ? 'text-[#F59E0B]' : 'text-[#F2F2F2]'}`}>
                   {convUsed} / {cfg.conv_limit}
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-[#2A2F42] overflow-hidden">
+              <div className="h-2 rounded-full bg-[#2A2A2A] overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${convPct >= 100 ? 'bg-[#FF4D6A]' : convWarning ? 'bg-[#F59E0B]' : 'bg-[#7B61FF]'}`}
+                  className={`h-full rounded-full transition-all duration-700 ${convPct >= 100 ? 'bg-[#FF4D6A]' : convWarning ? 'bg-[#F59E0B]' : 'bg-[#FF7A1A]'}`}
                   style={{ width: `${convPct}%` }}
                 />
               </div>
-              <p className="text-xs text-[#6B7280] mt-1.5">{convPct}% utilizado</p>
+              <p className="text-xs text-[#8A8A8A] mt-1.5">{convPct}% utilizado</p>
             </div>
           </div>
 
           {/* Botón soporte */}
           {!isExpiring && !isExpired && (
             <a href={SOPORTE_URL} target="_blank" rel="noopener noreferrer"
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#2A2F42] text-[#6B7280] text-sm hover:text-[#E8EAF0] hover:bg-[#1C2030] transition-colors cursor-pointer">
+              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[#2A2A2A] text-[#8A8A8A] text-sm hover:text-[#F2F2F2] hover:bg-[#1C1C1C] transition-colors cursor-pointer">
               <MessageCircle size={14} /> Contactar soporte
             </a>
           )}
@@ -224,34 +224,34 @@ export default function MiPlanPage() {
       </div>
 
       {/* Historial de pagos */}
-      <div className="bg-[#141720] border border-[#2A2F42] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#2A2F42]">
-          <h3 className="text-sm font-semibold text-[#E8EAF0]">Historial de pagos</h3>
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#2A2A2A]">
+          <h3 className="text-sm font-semibold text-[#F2F2F2]">Historial de pagos</h3>
         </div>
 
         {payments.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-sm text-[#6B7280]">No hay pagos registrados aún</p>
-            <p className="text-xs text-[#6B7280] mt-1">Los pagos aparecerán aquí una vez que el equipo INKABOT los registre</p>
+            <p className="text-sm text-[#8A8A8A]">No hay pagos registrados aún</p>
+            <p className="text-xs text-[#8A8A8A] mt-1">Los pagos aparecerán aquí una vez que el equipo INKABOT los registre</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#2A2F42] bg-[#0D0F14]">
+                <tr className="border-b border-[#2A2A2A] bg-[#0A0A0A]">
                   {['Fecha', 'Plan', 'Método', 'Monto', 'Estado'].map(h => (
-                    <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">{h}</th>
+                    <th key={h} className="px-5 py-3 text-left text-xs font-medium text-[#8A8A8A] uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2A2F42]">
+              <tbody className="divide-y divide-[#2A2A2A]">
                 {payments.map(p => (
-                  <tr key={p.id} className="hover:bg-[#1C2030] transition-colors">
-                    <td className="px-5 py-3.5 text-sm text-[#6B7280]">{fmtShort(p.payment_date)}</td>
+                  <tr key={p.id} className="hover:bg-[#1C1C1C] transition-colors">
+                    <td className="px-5 py-3.5 text-sm text-[#8A8A8A]">{fmtShort(p.payment_date)}</td>
                     <td className="px-5 py-3.5">
                       <PlanBadge plan={p.plan_name} />
                     </td>
-                    <td className="px-5 py-3.5 text-sm text-[#E8EAF0]">{p.method}</td>
+                    <td className="px-5 py-3.5 text-sm text-[#F2F2F2]">{p.method}</td>
                     <td className="px-5 py-3.5">
                       <span className="text-sm font-bold text-[#00E5A0]">S/ {p.amount.toFixed(2)}</span>
                     </td>
@@ -265,10 +265,10 @@ export default function MiPlanPage() {
           </div>
         )}
 
-        <div className="px-5 py-3 border-t border-[#2A2F42] bg-[#0D0F14] flex items-center justify-between">
-          <p className="text-xs text-[#6B7280]">{payments.length} pago{payments.length !== 1 ? 's' : ''} registrado{payments.length !== 1 ? 's' : ''}</p>
+        <div className="px-5 py-3 border-t border-[#2A2A2A] bg-[#0A0A0A] flex items-center justify-between">
+          <p className="text-xs text-[#8A8A8A]">{payments.length} pago{payments.length !== 1 ? 's' : ''} registrado{payments.length !== 1 ? 's' : ''}</p>
           <a href={SOPORTE_URL} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-[#7B61FF] hover:text-[#00E5A0] transition-colors cursor-pointer">
+            className="flex items-center gap-1.5 text-xs text-[#FF7A1A] hover:text-[#00E5A0] transition-colors cursor-pointer">
             <MessageCircle size={11} /> +51 924 940 724
           </a>
         </div>

@@ -18,8 +18,8 @@ export function MessagesChart({ data, title = 'Mensajes por día' }: MessagesCha
         <AreaChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="gradViolet" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6c3fff" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#6c3fff" stopOpacity={0} />
+              <stop offset="5%" stopColor="#FF7A1A" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#FF7A1A" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#00e5ff" stopOpacity={0.3} />
@@ -37,7 +37,7 @@ export function MessagesChart({ data, title = 'Mensajes por día' }: MessagesCha
             wrapperStyle={{ fontSize: 11, color: '#8888aa' }}
             formatter={(value) => value === 'sent' ? 'Enviados' : 'Recibidos'}
           />
-          <Area type="monotone" dataKey="sent" stroke="#6c3fff" strokeWidth={2} fill="url(#gradViolet)" name="sent" />
+          <Area type="monotone" dataKey="sent" stroke="#FF7A1A" strokeWidth={2} fill="url(#gradViolet)" name="sent" />
           <Area type="monotone" dataKey="received" stroke="#00e5ff" strokeWidth={2} fill="url(#gradCyan)" name="received" />
         </AreaChart>
       </ResponsiveContainer>

@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Sidebar role="admin" isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Navbar user={user} onMenuClick={() => setSidebarOpen(o => !o)} />
       <main className="md:ml-60 pt-16 min-h-screen">

@@ -5,15 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg: #0D0F14;
-  --surface: #141720;
-  --surface2: #1C2030;
-  --border: #2A2F42;
-  --primary: #7B61FF;
-  --primary-dim: #5B41DF;
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --surface2: #1C1C1C;
+  --border: #2A2A2A;
+  --primary: #FF7A1A;
+  --primary-dim: #E0650A;
   --secondary: #00E5A0;
-  --text: #E8EAF0;
-  --muted: #6B7280;
+  --text: #F2F2F2;
+  --muted: #8A8A8A;
   --radius: 10px;
 
   --background: var(--bg);

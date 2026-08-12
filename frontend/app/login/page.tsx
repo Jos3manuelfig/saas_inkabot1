@@ -41,41 +41,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[#6c3fff]/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[#00e5ff]/5 blur-3xl" />
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[var(--primary)]/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-[var(--primary)]/5 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#6c3fff] shadow-[0_0_30px_rgba(108,63,255,0.4)] mb-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--primary)] shadow-[0_0_30px_rgba(255,122,26,0.4)] mb-4">
             <Bot size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-wide">
-            INKA<span className="text-[#6c3fff]">BOT</span>
+          <h1 className="text-3xl font-bold text-[var(--text)] tracking-wide">
+            INKA<span className="text-[var(--primary)]">BOT</span>
           </h1>
-          <p className="mt-1 text-sm text-[#8888aa]">Gestión de Chatbots WhatsApp</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">Gestión de Chatbots WhatsApp</p>
         </div>
 
-        <div className="rounded-2xl border border-[#1e1e30] bg-[#13131f] p-8 shadow-2xl shadow-black/50">
-          <h2 className="text-lg font-semibold text-[#e8e8f0] mb-6">Iniciar sesión</h2>
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-2xl shadow-black/50">
+          <h2 className="text-lg font-semibold text-[var(--text)] mb-6">Iniciar sesión</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#8888aa] mb-1.5">Correo electrónico</label>
+              <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Correo electrónico</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => { setEmail(e.target.value); clearError() }}
                 placeholder="admin@inkabot.pe"
                 required
-                className="w-full rounded-lg border border-[#1e1e30] bg-[#0f0f1a] px-3.5 py-2.5 text-sm text-[#e8e8f0] placeholder:text-[#4a4a6a] focus:border-[#6c3fff] focus:outline-none focus:ring-1 focus:ring-[#6c3fff] transition-colors"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface2)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--muted)]/60 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#8888aa] mb-1.5">Contraseña</label>
+              <label className="block text-xs font-medium text-[var(--muted)] mb-1.5">Contraseña</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
@@ -83,12 +83,12 @@ export default function LoginPage() {
                   onChange={e => { setPassword(e.target.value); clearError() }}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-lg border border-[#1e1e30] bg-[#0f0f1a] px-3.5 py-2.5 pr-10 text-sm text-[#e8e8f0] placeholder:text-[#4a4a6a] focus:border-[#6c3fff] focus:outline-none focus:ring-1 focus:ring-[#6c3fff] transition-colors"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface2)] px-3.5 py-2.5 pr-10 text-sm text-[var(--text)] placeholder:text-[var(--muted)]/60 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8888aa] hover:text-[#e8e8f0] cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)] cursor-pointer"
                 >
                   {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -104,12 +104,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-lg bg-[#6c3fff] py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(108,63,255,0.3)] hover:bg-[#4f2dcc] disabled:opacity-70 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2"
+              className="mt-2 w-full rounded-lg bg-[var(--primary)] py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(255,122,26,0.3)] hover:bg-[var(--primary-dim)] disabled:opacity-70 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2"
             >
               {loading ? <><Loader2 size={15} className="animate-spin" /> Ingresando...</> : 'Ingresar'}
             </button>
           </form>
 
+          <p className="mt-6 text-center text-sm text-[var(--muted)]">
+            ¿No tienes cuenta?{' '}
+            <a href="/registro" className="text-[var(--primary)] hover:text-[var(--primary-dim)] font-medium">
+              Crear vendedor IA
+            </a>
+          </p>
         </div>
       </div>
     </div>
