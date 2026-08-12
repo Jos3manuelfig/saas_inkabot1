@@ -71,7 +71,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
 export default function VendedorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const [step, setStep] = useState<StepKey>('personalidad')
+  const [step, setStep] = useState<StepKey>('conocimiento')
   const [agent, setAgent] = useState<Agent | null>(null)
   const [simulatorOpen, setSimulatorOpen] = useState(false)
 
